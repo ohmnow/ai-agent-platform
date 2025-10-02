@@ -24,6 +24,14 @@ import { financeAgentConfig } from './finance-agent.js';
 import { budgetAnalyzerConfig } from './budget-analyzer.js';
 import { researchAgentConfig } from './research-agent.js';
 import { notesAgentConfig } from './notes-agent.js';
+import {
+  shoppingAgentConfig,
+  productSpecsResearcherConfig,
+  priceTrackerConfig,
+  reviewAnalyzerConfig,
+  dealFinderConfig,
+  alternativeFinderConfig
+} from './shopping-agent.js';
 import { permissionManager } from '../lib/permissions.js';
 
 export interface AgentEvent {
@@ -87,6 +95,7 @@ Use Task tool to delegate to specialized agents:
   * budget-analyzer: For advanced budget analysis, pattern recognition, forecasting, and budget optimization (use when user asks about budgets, spending patterns, financial insights, or savings optimization)
   * research: For web research, fact-checking, information gathering (use when user asks questions needing external knowledge)
   * notes: For accessing and managing user's notes and calendar (use when user references meetings, past conversations, saved info)
+  * shopping: For product research, price comparison, deal finding, purchase recommendations (use when user mentions products, shopping, prices, purchases)
 
 IMPORTANT: Always use the Task tool when delegating. Do not try to answer financial, research, or notes questions directly - delegate to the appropriate agent.
 
@@ -118,7 +127,13 @@ Remember: The file system (data/) contains user information. Use Grep/Glob for s
           'finance': financeAgentConfig,
           'research': researchAgentConfig,
           'notes': notesAgentConfig,
+          'shopping': shoppingAgentConfig,
           'budget-analyzer': budgetAnalyzerConfig,
+          'product-specs-researcher': productSpecsResearcherConfig,
+          'price-tracker': priceTrackerConfig,
+          'review-analyzer': reviewAnalyzerConfig,
+          'deal-finder': dealFinderConfig,
+          'alternative-finder': alternativeFinderConfig,
         },
 
         // Connect MCP server with user data
@@ -127,7 +142,7 @@ Remember: The file system (data/) contains user information. Use Grep/Glob for s
         },
 
         // Allow master to use Task tool for delegation plus basic tools
-        allowedTools: ['Task', 'Bash', 'Read', 'Write', 'Grep', 'Glob', 'WebSearch'],
+        allowedTools: ['Task', 'Bash', 'Read', 'Write', 'Grep', 'Glob', 'WebSearch', 'WebFetch'],
 
         // Use permission manager for user approval
         canUseTool: permissionManager.getCanUseToolCallback(),
