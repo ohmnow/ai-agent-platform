@@ -13,6 +13,33 @@
 import type { Request, Response } from 'express';
 import { oauthManager } from '../../lib/oauth-manager.js';
 import { credentialsVault } from '../../lib/credentials-vault.js';
+import { randomBytes } from 'crypto';
+
+// Simple in-memory state storage for CSRF protection
+// In production, use Redis or session store
+const stateStorage = new Map<string, { userId: string; service: string; timestamp: number }>();
+
+// Clean up expired states every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  const expirationMs = 10 * 60 * 1000; // 10 minutes
+  const expiredStates: string[] = [];
+
+  stateStorage.forEach((data, state) => {
+    if (now - data.timestamp > expirationMs) {
+      expiredStates.push(state);
+    }
+  });
+
+  expiredStates.forEach(state => stateStorage.delete(state));
+}, 10 * 60 * 1000);
+
+/**
+ * Generates a random state parameter for CSRF protection
+ */
+function generateState(): string {
+  return randomBytes(32).toString('hex');
+}
 
 /**
  * GET /api/auth/:service/authorize
@@ -32,12 +59,25 @@ export async function handleAuthorize(req: Request, res: Response) {
   const userId = req.query.userId as string || 'user-001'; // TODO: Get from session
 
   try {
-    // TODO: Implement
-    // const state = generateRandomState();
-    // const authUrl = await oauthManager.getAuthorizationUrl(service, userId, state);
-    // res.redirect(authUrl);
+    if (!service) {
+      return res.status(400).json({ error: 'Service parameter is required' });
+    }
 
-    res.status(501).json({ error: 'Not implemented: handleAuthorize' });
+    // Generate random state for CSRF protection
+    const state = generateState();
+
+    // Store state with userId and service for validation in callback
+    stateStorage.set(state, {
+      userId,
+      service,
+      timestamp: Date.now(),
+    });
+
+    // Get authorization URL from OAuth manager
+    const authUrl = await oauthManager.getAuthorizationUrl(service, userId, state);
+
+    // Redirect user to Google consent screen
+    res.redirect(authUrl);
   } catch (error: any) {
     console.error('Authorization error:', error);
     res.status(500).json({ error: error.message });
@@ -58,24 +98,85 @@ export async function handleAuthorize(req: Request, res: Response) {
  */
 export async function handleCallback(req: Request, res: Response) {
   const { service } = req.params;
-  const { code, state } = req.query;
+  const { code, state, error: oauthError } = req.query;
+
+  // Check for OAuth errors
+  if (oauthError) {
+    console.error('OAuth error:', oauthError);
+    return res.status(400).send(`
+      <!DOCTYPE html>
+      <html>
+        <head><title>Authentication Failed</title></head>
+        <body>
+          <h1>Authentication Failed</h1>
+          <p>Error: ${oauthError}</p>
+          <p><a href="/">Return to app</a></p>
+        </body>
+      </html>
+    `);
+  }
 
   if (!code || !state) {
     return res.status(400).json({ error: 'Missing code or state parameter' });
   }
 
   try {
-    // TODO: Implement
-    // 1. Validate state
-    // 2. Get userId from state storage
-    // 3. Exchange code for tokens
-    // 4. Store in vault
-    // 5. Redirect to success page
+    // Validate state parameter
+    const stateData = stateStorage.get(state as string);
+    if (!stateData) {
+      return res.status(400).json({ error: 'Invalid or expired state parameter' });
+    }
 
-    res.status(501).json({ error: 'Not implemented: handleCallback' });
+    // Remove state after validation (one-time use)
+    stateStorage.delete(state as string);
+
+    const { userId, service: storedService } = stateData;
+
+    // Verify service matches
+    if (service !== storedService) {
+      return res.status(400).json({ error: 'Service mismatch' });
+    }
+
+    // Exchange code for tokens
+    await oauthManager.handleCallback(
+      code as string,
+      state as string,
+      userId,
+      service
+    );
+
+    // Redirect to success page
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head><title>Authentication Successful</title></head>
+        <body>
+          <h1>✓ Authentication Successful</h1>
+          <p>You have successfully connected ${service}.</p>
+          <p><a href="/">Return to app</a></p>
+          <script>
+            // Close popup window if opened in popup
+            if (window.opener) {
+              window.opener.postMessage({ type: 'oauth-success', service: '${service}' }, '*');
+              setTimeout(() => window.close(), 2000);
+            }
+          </script>
+        </body>
+      </html>
+    `);
   } catch (error: any) {
     console.error('Callback error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html>
+        <head><title>Authentication Error</title></head>
+        <body>
+          <h1>Authentication Error</h1>
+          <p>Error: ${error.message}</p>
+          <p><a href="/">Return to app</a></p>
+        </body>
+      </html>
+    `);
   }
 }
 
@@ -94,11 +195,31 @@ export async function listCredentials(req: Request, res: Response) {
   const userId = req.query.userId as string || 'user-001'; // TODO: Get from session
 
   try {
-    // TODO: Implement
-    // const credentials = await credentialsVault.list(userId);
-    // res.json({ credentials });
+    // Get list of connected services
+    const credentials = await credentialsVault.list(userId);
 
-    res.status(501).json({ error: 'Not implemented: listCredentials' });
+    // Add expiration status
+    const credentialsWithStatus = credentials.map((cred) => {
+      const now = Date.now();
+      const expiresAt = cred.expiresAt ? cred.expiresAt.getTime() : null;
+
+      let status = 'active';
+      if (expiresAt) {
+        if (expiresAt < now) {
+          status = 'expired';
+        } else if (expiresAt - now < 5 * 60 * 1000) {
+          status = 'expiring_soon';
+        }
+      }
+
+      return {
+        service: cred.service,
+        expiresAt: cred.expiresAt,
+        status,
+      };
+    });
+
+    res.json({ credentials: credentialsWithStatus });
   } catch (error: any) {
     console.error('List credentials error:', error);
     res.status(500).json({ error: error.message });
@@ -121,12 +242,17 @@ export async function deleteCredential(req: Request, res: Response) {
   const userId = req.query.userId as string || 'user-001'; // TODO: Get from session
 
   try {
-    // TODO: Implement
-    // await oauthManager.revokeToken(userId, service);
-    // await credentialsVault.delete(userId, service);
-    // res.json({ success: true });
+    if (!service) {
+      return res.status(400).json({ error: 'Service parameter is required' });
+    }
 
-    res.status(501).json({ error: 'Not implemented: deleteCredential' });
+    // Revoke token with OAuth provider and delete from vault
+    await oauthManager.revokeToken(userId, service);
+
+    res.json({
+      success: true,
+      message: `Credentials for ${service} have been revoked and deleted`,
+    });
   } catch (error: any) {
     console.error('Delete credential error:', error);
     res.status(500).json({ error: error.message });
@@ -148,11 +274,18 @@ export async function refreshCredential(req: Request, res: Response) {
   const userId = req.query.userId as string || 'user-001'; // TODO: Get from session
 
   try {
-    // TODO: Implement
-    // const token = await oauthManager.refreshToken(userId, service);
-    // res.json({ expiresAt: new Date(token.expiresAt) });
+    if (!service) {
+      return res.status(400).json({ error: 'Service parameter is required' });
+    }
 
-    res.status(501).json({ error: 'Not implemented: refreshCredential' });
+    // Refresh the token
+    const token = await oauthManager.refreshToken(userId, service);
+
+    res.json({
+      success: true,
+      expiresAt: new Date(token.expiresAt),
+      message: `Token for ${service} has been refreshed`,
+    });
   } catch (error: any) {
     console.error('Refresh credential error:', error);
     res.status(500).json({ error: error.message });

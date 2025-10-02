@@ -19,7 +19,8 @@
     "example:hooks": "tsx src/examples/hooks-example.ts",
     "example:permissions": "tsx src/examples/permissions-example.ts",
     "example:advanced": "tsx src/examples/advanced-features.ts",
-    "example:memory": "tsx src/examples/memory-example.ts"
+    "example:memory": "tsx src/examples/memory-example.ts",
+    "example:oauth": "tsx src/examples/oauth-credentials-example.ts"
   },
   "keywords": [
     "claude",
