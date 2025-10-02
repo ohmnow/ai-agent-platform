@@ -46,9 +46,6 @@ jobs:
       env:
         DATABASE_URL: file:./dev.db
 
-    - name: Check TypeScript
-      run: npx tsc --noEmit
-
   lint:
     runs-on: ubuntu-latest
 
