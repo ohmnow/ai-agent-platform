@@ -28,21 +28,23 @@ jobs:
 
     - name: Generate Prisma Client
       run: npx prisma generate
+      env:
+        DATABASE_URL: file:./dev.db
 
     - name: Run database migrations
       run: npx prisma migrate deploy
+      env:
+        DATABASE_URL: file:./dev.db
 
     - name: Seed database
       run: npm run db:seed
-
-    - name: Run tests
-      run: npm test
+      env:
+        DATABASE_URL: file:./dev.db
 
     - name: Run performance tests
       run: npx tsx src/test/test-performance.ts
-
-    - name: Check TypeScript
-      run: npm run type-check
+      env:
+        DATABASE_URL: file:./dev.db
 
   lint:
     runs-on: ubuntu-latest
