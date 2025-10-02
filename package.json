@@ -17,6 +17,7 @@
     "lint": "echo \"Linting...\" && exit 0",
     "test:delegation": "tsx src/test/test-delegation.ts",
     "test:orchestrator": "tsx src/test/test-orchestrator.ts",
+    "test:task-calendar": "tsx src/test/test-task-calendar-agent.ts",
     "test:alpha-vantage": "tsx src/test/test-alpha-vantage.ts",
     "example:basic": "tsx src/examples/basic-query.ts",
     "example:tools": "tsx src/examples/custom-tools.ts",

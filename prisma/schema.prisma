@@ -311,12 +311,51 @@ model Task {
   // Tags/categories
   tags        String?  // Comma-separated
 
+  // Additional PR #9 fields
+  estimatedMinutes Int?    // Time estimate in minutes
+  actualMinutes    Int?    // Actual time spent
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([userId])
   @@index([status])
   @@index([dueDate])
+  @@index([priority])
+}
+
+// ===== TASK/CALENDAR MODELS (Additional from PR #9) =====
+
+model TimeBlock {
+  id          String   @id @default(uuid())
+  title       String
+  start       DateTime
+  end         DateTime
+  taskId      String?  // Optional link to a task
+  category    String   // e.g., "Deep Work", "Meetings", "Admin"
+  description String?
+  userId      String   @default("user-001")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([start])
+  @@index([category])
+}
+
+model ProductivityLog {
+  id             String   @id @default(uuid())
+  date           DateTime
+  tasksCompleted Int      @default(0)
+  timeSpent      Int      // Total minutes spent on tasks
+  focusRating    Int?     // 1-5 rating of focus quality
+  notes          String?  // Reflection notes
+  userId         String   @default("user-001")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+  @@index([date])
 }
 
 // ===== EMAIL METADATA (Optional Cache) =====

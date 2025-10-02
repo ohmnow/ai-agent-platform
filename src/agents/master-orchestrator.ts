@@ -26,6 +26,7 @@ import { budgetAnalyzerConfig } from './budget-analyzer.js';
 import { researchAgentConfig } from './research-agent.js';
 import { notesAgentConfig } from './notes-agent.js';
 import { investingAgentConfig } from './investing-agent.js';
+import { taskCalendarAgentConfig, productivityOptimizerConfig, meetingCoordinatorConfig } from './task-calendar-agent.js';
 import {
   shoppingAgentConfig,
   productSpecsResearcherConfig,
@@ -98,9 +99,10 @@ Use Task tool to delegate to specialized agents:
   * investing: For investment analysis, portfolio tracking, stock research, market data (use when user mentions stocks, investments, portfolio, trading)
   * research: For web research, fact-checking, information gathering (use when user asks questions needing external knowledge)
   * notes: For accessing and managing user's notes and calendar (use when user references meetings, past conversations, saved info)
+  * task-calendar: For task management, scheduling, time blocking, productivity tracking (use when user mentions tasks, deadlines, productivity, calendar scheduling)
   * shopping: For product research, price comparison, deal finding, purchase recommendations (use when user mentions products, shopping, prices, purchases)
 
-IMPORTANT: Always use the Task tool when delegating. Do not try to answer investment, financial, research, or notes questions directly - delegate to the appropriate agent.
+IMPORTANT: Always use the Task tool when delegating. Do not try to answer investment, financial, research, notes, or task management questions directly - delegate to the appropriate agent.
 
 Examples:
 - "What's my portfolio performance?" → use Task tool with subagent_type="investing"
@@ -108,6 +110,8 @@ Examples:
 - "Analyze Tesla stock" → use Task tool with subagent_type="investing"
 - "Help me optimize my budget" → use Task tool with subagent_type="budget-analyzer"
 - "What are my spending patterns?" → use Task tool with subagent_type="budget-analyzer"
+- "Create a task for project review" → use Task tool with subagent_type="task-calendar"
+- "What's my schedule today?" → use Task tool with subagent_type="task-calendar"
 - "Find the best laptop under $1000" → use Task tool with subagent_type="shopping"
 
 - Coordinate multiple agents in parallel when beneficial
@@ -134,8 +138,11 @@ Remember: The file system (data/) contains user information. Use Grep/Glob for s
           'finance': financeAgentConfig,
           'research': researchAgentConfig,
           'notes': notesAgentConfig,
-          'shopping': shoppingAgentConfig,
+          'task-calendar': taskCalendarAgentConfig,
           'budget-analyzer': budgetAnalyzerConfig,
+          'productivity-optimizer': productivityOptimizerConfig,
+          'meeting-coordinator': meetingCoordinatorConfig,
+          'shopping': shoppingAgentConfig,
           'product-specs-researcher': productSpecsResearcherConfig,
           'price-tracker': priceTrackerConfig,
           'review-analyzer': reviewAnalyzerConfig,
