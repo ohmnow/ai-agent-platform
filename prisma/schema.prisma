@@ -54,3 +54,50 @@ model CalendarEvent {
   @@index([userId])
   @@index([start])
 }
+
+// TODO for Claude Code: Implement PlaidItem model
+// This model stores Plaid-specific connection data per user
+//
+// Requirements:
+// 1. Add PlaidItem model with fields:
+//    - id: String (UUID)
+//    - userId: String (foreign key to User)
+//    - itemId: String (Plaid's item_id)
+//    - accessToken: String (encrypted - store via credentials vault pattern)
+//    - institutionId: String (e.g., 'ins_109508')
+//    - institutionName: String (e.g., 'Chase')
+//    - accounts: String (JSON array of account objects)
+//    - cursor: String? (for transactionsSync API pagination)
+//    - lastSync: DateTime? (last successful transaction sync)
+//    - status: String? (active, needs_reauth, error)
+//    - error: String? (JSON - error details if any)
+//    - createdAt: DateTime
+//    - updatedAt: DateTime
+//
+// 2. Add unique constraint on [userId, itemId]
+// 3. Add index on userId for fast lookups
+// 4. Add relation to User model (if not exists from PR #1)
+//
+// Example schema:
+//
+// model PlaidItem {
+//   id              String    @id @default(uuid())
+//   userId          String
+//   itemId          String
+//   accessToken     String
+//   institutionId   String
+//   institutionName String
+//   accounts        String    // JSON: [{ id, name, type, mask }]
+//   cursor          String?
+//   lastSync        DateTime?
+//   status          String    @default("active")
+//   error           String?
+//   createdAt       DateTime  @default(now())
+//   updatedAt       DateTime  @updatedAt
+//
+//   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+//
+//   @@unique([userId, itemId])
+//   @@index([userId])
+//   @@index([status])
+// }
