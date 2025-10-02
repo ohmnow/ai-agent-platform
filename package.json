@@ -12,6 +12,7 @@
     "lint": "echo \"Linting...\" && exit 0",
     "test:delegation": "tsx src/test/test-delegation.ts",
     "test:orchestrator": "tsx src/test/test-orchestrator.ts",
+    "test:email": "tsx src/test/test-email-agent.ts",
     "example:basic": "tsx src/examples/basic-query.ts",
     "example:tools": "tsx src/examples/custom-tools.ts",
     "example:mcp": "tsx src/examples/mcp-server.ts",
@@ -38,6 +39,7 @@
     "@types/express": "^5.0.3",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "googleapis": "^144.0.0",
     "marked": "^16.3.0",
     "prisma": "^6.16.3",
     "zod": "^3.23.8"

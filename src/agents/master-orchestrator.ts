@@ -16,13 +16,15 @@ import {
   type SessionStartHookInput,
   type SessionEndHookInput,
   type PreCompactHookInput,
-  type AgentInput,
-  type TaskOutput,
+  // type AgentInput,
+  // type TaskOutput,
 } from '@anthropic-ai/claude-agent-sdk';
 import { userDataServer } from '../mcp-servers/user-data-server.js';
+import { emailServer } from '../mcp-servers/email-server.js';
 import { financeAgentConfig, budgetAnalyzerConfig } from './finance-agent.js';
 import { researchAgentConfig } from './research-agent.js';
 import { notesAgentConfig } from './notes-agent.js';
+import { emailAgentConfig } from './email-agent.js';
 import { permissionManager } from '../lib/permissions.js';
 
 export interface AgentEvent {
@@ -85,10 +87,14 @@ Use Task tool to delegate to specialized agents:
   * finance: For financial analysis, spending tracking, budgets (use when user mentions money, transactions, budgets)
   * research: For web research, fact-checking, information gathering (use when user asks questions needing external knowledge)
   * notes: For accessing and managing user's notes and calendar (use when user references meetings, past conversations, saved info)
+  * email: For email management, inbox summaries, drafting replies, and email organization (use when user mentions email, inbox, messages, or wants to send emails)
 
-IMPORTANT: Always use the Task tool when delegating. Do not try to answer financial, research, or notes questions directly - delegate to the appropriate agent.
+IMPORTANT: Always use the Task tool when delegating. Do not try to answer financial, research, notes, or email questions directly - delegate to the appropriate agent.
 
-Example: If user asks "How much did I spend on groceries?", use Task tool with subagent_type="finance"
+Examples:
+- "How much did I spend on groceries?" → use Task tool with subagent_type="finance"
+- "Summarize my inbox" → use Task tool with subagent_type="email"
+- "Draft a reply to John's email" → use Task tool with subagent_type="email"
 
 - Coordinate multiple agents in parallel when beneficial
 - Synthesize results from all agents
@@ -113,12 +119,14 @@ Remember: The file system (data/) contains user information. Use Grep/Glob for s
           'finance': financeAgentConfig,
           'research': researchAgentConfig,
           'notes': notesAgentConfig,
+          'email': emailAgentConfig,
           'budget-analyzer': budgetAnalyzerConfig,
         },
 
-        // Connect MCP server with user data
+        // Connect MCP servers with user data and email
         mcpServers: {
-          'user-data': userDataServer
+          'user-data': userDataServer,
+          'email': emailServer
         },
 
         // Allow master to use Task tool for delegation plus basic tools
@@ -191,7 +199,7 @@ Remember: The file system (data/) contains user information. Use Grep/Glob for s
 
     // Detect Task tool usage (agent delegation)
     if (input.tool_name === 'Task') {
-      const taskInput = input.tool_input as AgentInput;
+      const taskInput = input.tool_input as any; // AgentInput type not available in this SDK version
       const agentType = taskInput.subagent_type || 'unknown';
       console.log(`✅ TASK TOOL INVOKED - Subagent: ${agentType}`);
 
@@ -212,7 +220,7 @@ Remember: The file system (data/) contains user information. Use Grep/Glob for s
 
     // If Task tool completed, capture subagent metrics
     if (input.tool_name === 'Task') {
-      const taskOutput = input.tool_response as TaskOutput;
+      const taskOutput = input.tool_response as any; // TaskOutput type not available in this SDK version
 
       this.events.push({
         type: 'agent_complete',
