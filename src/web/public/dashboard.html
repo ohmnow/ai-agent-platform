@@ -127,13 +127,44 @@
       // Add active class to clicked item
       element.classList.add('active');
 
-      // For now, just log the navigation (can be enhanced with actual routing)
+      // Show navigation feedback
       console.log(`📍 Navigating to: ${section}`);
       addAgentActivity(`Navigated to ${section}`);
+
+      // Show temporary toast-like feedback
+      showNavigationFeedback(section);
 
       // TODO: Implement actual page switching logic here
       // This could involve showing/hiding different content sections
       // or implementing a proper router
+    }
+
+    // Show navigation feedback
+    function showNavigationFeedback(section) {
+      // Create feedback element if it doesn't exist
+      let feedback = document.getElementById('nav-feedback');
+      if (!feedback) {
+        feedback = document.createElement('div');
+        feedback.id = 'nav-feedback';
+        feedback.className = 'nav-feedback';
+        document.body.appendChild(feedback);
+      }
+
+      const sectionNames = {
+        'dashboard': 'Dashboard',
+        'agents': 'Agent Settings',
+        'history': 'Task History',
+        'costs': 'API Usage',
+        'settings': 'Settings'
+      };
+
+      feedback.textContent = `${sectionNames[section] || section} (Coming Soon)`;
+      feedback.style.display = 'block';
+
+      // Hide after 2 seconds
+      setTimeout(() => {
+        feedback.style.display = 'none';
+      }, 2000);
     }
   </script>
 </body>

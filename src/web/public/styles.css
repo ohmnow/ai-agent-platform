@@ -259,6 +259,16 @@ footer {
   border-left: 4px solid var(--primary);
 }
 
+.elapsed-time {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
 .status-dot {
   width: 10px;
   height: 10px;
@@ -344,6 +354,30 @@ footer {
   margin-bottom: 0.25rem;
   background: var(--background);
   border-radius: 4px;
+}
+
+.activity-time {
+  color: var(--text-light);
+  font-size: 0.75rem;
+  font-family: monospace;
+  opacity: 0.7;
+}
+
+.activity-log {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.tool-time {
+  color: var(--text-light);
+  font-size: 0.75rem;
+  font-family: monospace;
+  opacity: 0.7;
+}
+
+.tool-log {
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .main-content {
@@ -618,6 +652,36 @@ footer {
   margin: 8px 0;
   text-align: center;
   border: 1px solid var(--border);
+}
+
+/* ============================================
+   Navigation Feedback
+   ============================================ */
+
+.nav-feedback {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--primary);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  display: none;
+  font-weight: 500;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 /* ============================================
