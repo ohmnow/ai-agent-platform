@@ -54,3 +54,20 @@ model CalendarEvent {
   @@index([userId])
   @@index([start])
 }
+
+model Budget {
+  id        Int      @id @default(autoincrement())
+  userId    String   @default("user-001") @map("user_id")
+  category  String
+  amount    Float
+  period    String   @default("monthly")
+  startDate String   @map("start_date")
+  endDate   String?  @map("end_date")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, category, period], name: "budgets_user_category_period_idx")
+  @@index([userId], name: "budgets_user_id_idx")
+  @@index([category], name: "budgets_category_idx")
+  @@map("budgets")
+}
