@@ -15,19 +15,43 @@
       </div>
 
       <div class="agent-list">
-        <div class="agent-status">
+        <div class="agent-status" data-agent="Finance Agent" onclick="selectAgent('Finance Agent')">
           <span class="status-dot ready"></span>
           <span>Finance Agent</span>
         </div>
-        <div class="agent-status">
+        <div class="agent-status" data-agent="Research Agent" onclick="selectAgent('Research Agent')">
           <span class="status-dot ready"></span>
           <span>Research Agent</span>
         </div>
-        <div class="agent-status">
+        <div class="agent-status" data-agent="Notes Agent" onclick="selectAgent('Notes Agent')">
           <span class="status-dot ready"></span>
           <span>Notes Agent</span>
         </div>
       </div>
+
+      <!-- Navigation Menu -->
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-item active" onclick="navigateToSection('dashboard', this)">
+          <span class="nav-icon">📊</span>
+          Dashboard
+        </a>
+        <a href="#agents" class="nav-item" onclick="navigateToSection('agents', this)">
+          <span class="nav-icon">🤖</span>
+          Agent Settings
+        </a>
+        <a href="#history" class="nav-item" onclick="navigateToSection('history', this)">
+          <span class="nav-icon">📜</span>
+          Task History
+        </a>
+        <a href="#costs" class="nav-item" onclick="navigateToSection('costs', this)">
+          <span class="nav-icon">💰</span>
+          API Usage
+        </a>
+        <a href="#settings" class="nav-item" onclick="navigateToSection('settings', this)">
+          <span class="nav-icon">⚙️</span>
+          Settings
+        </a>
+      </nav>
 
       <div class="sidebar-section">
         <h3>Activity</h3>
@@ -66,6 +90,51 @@
 
     // Wire up tools and activity tracking
     // These are called from app-streaming.js when events occur
+
+    // Agent selection tracking
+    let selectedAgent = null;
+
+    // Agent selection function
+    function selectAgent(agentName) {
+      selectedAgent = agentName;
+
+      // Remove active class from all agents
+      document.querySelectorAll('.agent-status').forEach(el => {
+        el.classList.remove('active');
+      });
+
+      // Add active class to selected agent
+      const selectedEl = document.querySelector(`[data-agent="${agentName}"]`);
+      if (selectedEl) {
+        selectedEl.classList.add('active');
+      }
+
+      // Update activity log
+      addAgentActivity(`Selected ${agentName}`);
+
+      console.log(`🤖 Selected agent: ${agentName}`);
+    }
+
+    // Navigation function
+    function navigateToSection(section, element) {
+      event.preventDefault();
+
+      // Remove active class from all nav items
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.classList.remove('active');
+      });
+
+      // Add active class to clicked item
+      element.classList.add('active');
+
+      // For now, just log the navigation (can be enhanced with actual routing)
+      console.log(`📍 Navigating to: ${section}`);
+      addAgentActivity(`Navigated to ${section}`);
+
+      // TODO: Implement actual page switching logic here
+      // This could involve showing/hiding different content sections
+      // or implementing a proper router
+    }
   </script>
 </body>
 </html>

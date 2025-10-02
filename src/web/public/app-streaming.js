@@ -8,6 +8,13 @@
 let currentSessionId = localStorage.getItem('sessionId') || null;
 let eventSource = null;
 
+// Agent status tracking
+const agentStatus = {
+  'Finance Agent': 'ready',
+  'Research Agent': 'ready',
+  'Notes Agent': 'ready'
+};
+
 // Markdown configuration
 if (typeof marked !== 'undefined') {
   marked.setOptions({
@@ -28,6 +35,10 @@ async function sendMessage() {
   // Show user message
   addMessage(message, 'user');
   input.value = '';
+
+  // Detect which agent should handle this
+  const activeAgent = detectActiveAgent(message);
+  updateAgentStatus(activeAgent, 'running');
 
   // Create placeholder for assistant response
   const assistantMsgId = 'msg-' + Date.now();
@@ -67,6 +78,25 @@ async function sendMessage() {
     }
   });
 
+  // Enhanced activity tracking for different event types
+  eventSource.addEventListener('tool_use', (e) => {
+    const data = JSON.parse(e.data);
+    const activeAgent = detectActiveAgent(message);
+    addAgentActivity(`${activeAgent} is using ${data.toolName}`);
+    addToolUsage(data.toolName);
+  });
+
+  eventSource.addEventListener('thinking', (e) => {
+    const activeAgent = detectActiveAgent(message);
+    addAgentActivity(`${activeAgent} is analyzing the request`);
+  });
+
+  eventSource.addEventListener('searching', (e) => {
+    const data = JSON.parse(e.data);
+    const activeAgent = detectActiveAgent(message);
+    addAgentActivity(`${activeAgent} is searching: ${data.query}`);
+  });
+
   // Handle final result
   eventSource.addEventListener('result', (e) => {
     const data = JSON.parse(e.data);
@@ -98,6 +128,10 @@ async function sendMessage() {
     eventSource.close();
     eventSource = null;
 
+    // Reset agent status to ready
+    const activeAgent = detectActiveAgent(message);
+    updateAgentStatus(activeAgent, 'ready');
+
     // If no text received, show placeholder
     const msgElement = document.getElementById(assistantMsgId);
     if (msgElement && !accumulatedText) {
@@ -113,6 +147,10 @@ async function sendMessage() {
       eventSource.close();
       eventSource = null;
     }
+
+    // Set agent status to error
+    const activeAgent = detectActiveAgent(message);
+    updateAgentStatus(activeAgent, 'error');
 
     const msgElement = document.getElementById(assistantMsgId);
     if (msgElement && !accumulatedText) {
@@ -274,7 +312,7 @@ function addAgentActivity(text) {
 
 // Add tool usage
 function addToolUsage(toolName) {
-  const tools = document.getElementById('tools-used');
+  const tools = document.getElementById('tool-usage');
   if (!tools) return;
 
   // Check if tool already exists
@@ -293,6 +331,58 @@ function addToolUsage(toolName) {
   }
 }
 
+// Update agent status
+function updateAgentStatus(agentName, status) {
+  agentStatus[agentName] = status;
+
+  const dot = document.querySelector(`[data-agent="${agentName}"] .status-dot`);
+  if (dot) {
+    dot.className = `status-dot ${status}`;
+  }
+
+  // Log status change
+  console.log(`🤖 ${agentName} status: ${status}`);
+
+  // Add to activity log
+  const statusMessages = {
+    'idle': 'went idle',
+    'ready': 'is ready',
+    'running': 'started working',
+    'error': 'encountered an error'
+  };
+
+  if (statusMessages[status]) {
+    addAgentActivity(`${agentName} ${statusMessages[status]}`);
+  }
+}
+
+// Detect agent from message content (simple heuristic)
+function detectActiveAgent(messageContent) {
+  const content = messageContent.toLowerCase();
+
+  if (content.includes('financ') || content.includes('money') || content.includes('budget') || content.includes('transaction')) {
+    return 'Finance Agent';
+  } else if (content.includes('research') || content.includes('search') || content.includes('find') || content.includes('web')) {
+    return 'Research Agent';
+  } else if (content.includes('note') || content.includes('remember') || content.includes('save') || content.includes('document')) {
+    return 'Notes Agent';
+  }
+
+  // Default to Research Agent for general queries
+  return 'Research Agent';
+}
+
+// Initialize dashboard
+function initializeDashboard() {
+  addAgentActivity('Dashboard loaded');
+  addAgentActivity('All agents ready');
+
+  // Initialize agent status indicators
+  Object.keys(agentStatus).forEach(agent => {
+    updateAgentStatus(agent, 'ready');
+  });
+}
+
 // Handle Enter key
 document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('user-input');
@@ -304,4 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // Initialize dashboard
+  setTimeout(initializeDashboard, 100);
 });

@@ -244,6 +244,19 @@ footer {
   margin-bottom: 0.5rem;
   border-radius: 6px;
   background: var(--background);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.agent-status:hover {
+  background: rgba(204, 120, 92, 0.1);
+}
+
+.agent-status.active {
+  background: rgba(204, 120, 92, 0.1);
+  border-color: var(--primary);
+  border-left: 4px solid var(--primary);
 }
 
 .status-dot {
@@ -252,8 +265,63 @@ footer {
   border-radius: 50%;
 }
 
+.status-dot.idle {
+  background: #645F5A;
+}
+
 .status-dot.ready {
   background: var(--success);
+}
+
+.status-dot.running {
+  background: var(--warning);
+  animation: pulse 1.5s infinite;
+}
+
+.status-dot.error {
+  background: var(--error);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Navigation Menu */
+.sidebar-nav {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  margin: 1.5rem 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  color: var(--text);
+  text-decoration: none;
+  transition: all 0.2s;
+  border-radius: 6px;
+  margin-bottom: 0.25rem;
+  border: 2px solid transparent;
+}
+
+.nav-item:hover {
+  background: rgba(204, 120, 92, 0.05);
+  color: var(--primary);
+}
+
+.nav-item.active {
+  background: rgba(204, 120, 92, 0.1);
+  border-color: var(--primary);
+  border-left: 4px solid var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.nav-icon {
+  margin-right: 0.75rem;
+  font-size: 1.1rem;
 }
 
 .sidebar-section {
@@ -556,6 +624,46 @@ footer {
    Mobile Responsiveness
    ============================================ */
 
+@media (max-width: 768px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .sidebar {
+    padding: 1rem;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    overflow-y: visible;
+    max-height: 300px;
+  }
+
+  .sidebar-header {
+    margin-bottom: 1rem;
+  }
+
+  .sidebar-nav {
+    margin: 0.5rem 0;
+  }
+
+  .nav-item {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .nav-icon {
+    margin-right: 0.5rem;
+  }
+
+  .agent-status {
+    padding: 0.5rem;
+  }
+
+  .sidebar-section {
+    margin-top: 1rem;
+  }
+}
+
 @media (max-width: 600px) {
   .permission-buttons {
     flex-direction: column;
@@ -571,5 +679,15 @@ footer {
 
   .message.assistant table {
     font-size: 0.9em;
+  }
+
+  .chat-input-container {
+    padding: 1rem;
+    flex-direction: column;
+  }
+
+  #send-btn {
+    width: 100%;
+    margin-top: 0.5rem;
   }
 }
