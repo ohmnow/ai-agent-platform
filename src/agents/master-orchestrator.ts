@@ -23,6 +23,7 @@ import { userDataServer } from '../mcp-servers/user-data-server.js';
 import { financeAgentConfig, budgetAnalyzerConfig } from './finance-agent.js';
 import { researchAgentConfig } from './research-agent.js';
 import { notesAgentConfig } from './notes-agent.js';
+import { taskCalendarAgentConfig, productivityOptimizerConfig, meetingCoordinatorConfig } from './task-calendar-agent.js';
 import { permissionManager } from '../lib/permissions.js';
 
 export interface AgentEvent {
@@ -85,10 +86,14 @@ Use Task tool to delegate to specialized agents:
   * finance: For financial analysis, spending tracking, budgets (use when user mentions money, transactions, budgets)
   * research: For web research, fact-checking, information gathering (use when user asks questions needing external knowledge)
   * notes: For accessing and managing user's notes and calendar (use when user references meetings, past conversations, saved info)
+  * task-calendar: For task management, scheduling, time blocking, productivity tracking (use when user mentions tasks, deadlines, productivity, calendar scheduling)
 
-IMPORTANT: Always use the Task tool when delegating. Do not try to answer financial, research, or notes questions directly - delegate to the appropriate agent.
+IMPORTANT: Always use the Task tool when delegating. Do not try to answer financial, research, notes, or task management questions directly - delegate to the appropriate agent.
 
-Example: If user asks "How much did I spend on groceries?", use Task tool with subagent_type="finance"
+Examples:
+- If user asks "How much did I spend on groceries?", use Task tool with subagent_type="finance"
+- If user asks "Create a task for project review", use Task tool with subagent_type="task-calendar"
+- If user asks "What's my schedule today?", use Task tool with subagent_type="task-calendar"
 
 - Coordinate multiple agents in parallel when beneficial
 - Synthesize results from all agents
@@ -113,7 +118,10 @@ Remember: The file system (data/) contains user information. Use Grep/Glob for s
           'finance': financeAgentConfig,
           'research': researchAgentConfig,
           'notes': notesAgentConfig,
+          'task-calendar': taskCalendarAgentConfig,
           'budget-analyzer': budgetAnalyzerConfig,
+          'productivity-optimizer': productivityOptimizerConfig,
+          'meeting-coordinator': meetingCoordinatorConfig,
         },
 
         // Connect MCP server with user data
