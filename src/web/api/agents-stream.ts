@@ -100,8 +100,13 @@ export async function handleStreamingQuery(req: Request, res: Response) {
           'user-data': userDataServer
         },
 
-        // Tools
-        allowedTools: ['Task', 'Bash', 'Read', 'Write', 'Grep', 'Glob', 'WebSearch'],
+        // Tools - Include MCP server tools
+        allowedTools: [
+          'Task', 'Bash', 'Read', 'Write', 'Grep', 'Glob', 'WebSearch',
+          'mcp__user-data__analyze_transactions',
+          'mcp__user-data__search_notes',
+          'mcp__user-data__get_calendar_events',
+        ],
 
         // Permission handler
         canUseTool: permissionManager.getCanUseToolCallback(),
