@@ -16,17 +16,19 @@ import {
   type SessionStartHookInput,
   type SessionEndHookInput,
   type PreCompactHookInput,
-  type AgentInput,
-  type TaskOutput,
+  // type AgentInput,
+  // type TaskOutput,
 } from '@anthropic-ai/claude-agent-sdk';
 import { userDataServer } from '../mcp-servers/user-data-server.js';
 import { investingServer } from '../mcp-servers/investing-server.js';
+import { emailServer } from '../mcp-servers/email-server.js';
 import { financeAgentConfig } from './finance-agent.js';
 import { budgetAnalyzerConfig } from './budget-analyzer.js';
 import { researchAgentConfig } from './research-agent.js';
 import { notesAgentConfig } from './notes-agent.js';
 import { investingAgentConfig } from './investing-agent.js';
 import { taskCalendarAgentConfig, productivityOptimizerConfig, meetingCoordinatorConfig } from './task-calendar-agent.js';
+import { emailAgentConfig } from './email-agent.js';
 import {
   shoppingAgentConfig,
   productSpecsResearcherConfig,
@@ -100,9 +102,10 @@ Use Task tool to delegate to specialized agents:
   * research: For web research, fact-checking, information gathering (use when user asks questions needing external knowledge)
   * notes: For accessing and managing user's notes and calendar (use when user references meetings, past conversations, saved info)
   * task-calendar: For task management, scheduling, time blocking, productivity tracking (use when user mentions tasks, deadlines, productivity, calendar scheduling)
+  * email: For email management, inbox summaries, drafting replies, and email organization (use when user mentions email, inbox, messages, or wants to send emails)
   * shopping: For product research, price comparison, deal finding, purchase recommendations (use when user mentions products, shopping, prices, purchases)
 
-IMPORTANT: Always use the Task tool when delegating. Do not try to answer investment, financial, research, notes, or task management questions directly - delegate to the appropriate agent.
+IMPORTANT: Always use the Task tool when delegating. Do not try to answer investment, financial, research, notes, task management, or email questions directly - delegate to the appropriate agent.
 
 Examples:
 - "What's my portfolio performance?" → use Task tool with subagent_type="investing"
@@ -112,6 +115,8 @@ Examples:
 - "What are my spending patterns?" → use Task tool with subagent_type="budget-analyzer"
 - "Create a task for project review" → use Task tool with subagent_type="task-calendar"
 - "What's my schedule today?" → use Task tool with subagent_type="task-calendar"
+- "Summarize my inbox" → use Task tool with subagent_type="email"
+- "Draft a reply to John's email" → use Task tool with subagent_type="email"
 - "Find the best laptop under $1000" → use Task tool with subagent_type="shopping"
 
 - Coordinate multiple agents in parallel when beneficial
@@ -139,6 +144,7 @@ Remember: The file system (data/) contains user information. Use Grep/Glob for s
           'research': researchAgentConfig,
           'notes': notesAgentConfig,
           'task-calendar': taskCalendarAgentConfig,
+          'email': emailAgentConfig,
           'budget-analyzer': budgetAnalyzerConfig,
           'productivity-optimizer': productivityOptimizerConfig,
           'meeting-coordinator': meetingCoordinatorConfig,
@@ -150,10 +156,11 @@ Remember: The file system (data/) contains user information. Use Grep/Glob for s
           'alternative-finder': alternativeFinderConfig,
         },
 
-        // Connect MCP servers with user and investing data
+        // Connect MCP servers with user data, investing, and email
         mcpServers: {
           'user-data': userDataServer,
           'investing': investingServer,
+          'email': emailServer,
         },
 
         // Allow master to use Task tool for delegation plus basic tools
@@ -226,7 +233,7 @@ Remember: The file system (data/) contains user information. Use Grep/Glob for s
 
     // Detect Task tool usage (agent delegation)
     if (input.tool_name === 'Task') {
-      const taskInput = input.tool_input as AgentInput;
+      const taskInput = input.tool_input as any; // AgentInput type not available in this SDK version
       const agentType = taskInput.subagent_type || 'unknown';
       console.log(`✅ TASK TOOL INVOKED - Subagent: ${agentType}`);
 
@@ -247,7 +254,7 @@ Remember: The file system (data/) contains user information. Use Grep/Glob for s
 
     // If Task tool completed, capture subagent metrics
     if (input.tool_name === 'Task') {
-      const taskOutput = input.tool_response as TaskOutput;
+      const taskOutput = input.tool_response as any; // TaskOutput type not available in this SDK version
 
       this.events.push({
         type: 'agent_complete',

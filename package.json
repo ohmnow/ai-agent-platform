@@ -18,6 +18,7 @@
     "test:delegation": "tsx src/test/test-delegation.ts",
     "test:orchestrator": "tsx src/test/test-orchestrator.ts",
     "test:task-calendar": "tsx src/test/test-task-calendar-agent.ts",
+    "test:email": "tsx src/test/test-email-agent.ts",
     "test:alpha-vantage": "tsx src/test/test-alpha-vantage.ts",
     "example:basic": "tsx src/examples/basic-query.ts",
     "example:tools": "tsx src/examples/custom-tools.ts",
@@ -46,6 +47,7 @@
     "alphavantage": "^2.5.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "googleapis": "^144.0.0",
     "marked": "^16.3.0",
     "prisma": "^6.16.3",
     "zod": "^3.23.8"
