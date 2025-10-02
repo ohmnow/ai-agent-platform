@@ -20,7 +20,8 @@ import {
   type TaskOutput,
 } from '@anthropic-ai/claude-agent-sdk';
 import { userDataServer } from '../mcp-servers/user-data-server.js';
-import { financeAgentConfig, budgetAnalyzerConfig } from './finance-agent.js';
+import { financeAgentConfig } from './finance-agent.js';
+import { budgetAnalyzerConfig } from './budget-analyzer.js';
 import { researchAgentConfig } from './research-agent.js';
 import { notesAgentConfig } from './notes-agent.js';
 import { permissionManager } from '../lib/permissions.js';
@@ -82,13 +83,17 @@ export class MasterOrchestrator {
 
 ## Take Action (Agent Delegation)
 Use Task tool to delegate to specialized agents:
-  * finance: For financial analysis, spending tracking, budgets (use when user mentions money, transactions, budgets)
+  * finance: For basic financial analysis, spending tracking (use for simple transaction queries)
+  * budget-analyzer: For advanced budget analysis, pattern recognition, forecasting, and budget optimization (use when user asks about budgets, spending patterns, financial insights, or savings optimization)
   * research: For web research, fact-checking, information gathering (use when user asks questions needing external knowledge)
   * notes: For accessing and managing user's notes and calendar (use when user references meetings, past conversations, saved info)
 
 IMPORTANT: Always use the Task tool when delegating. Do not try to answer financial, research, or notes questions directly - delegate to the appropriate agent.
 
-Example: If user asks "How much did I spend on groceries?", use Task tool with subagent_type="finance"
+Examples:
+- "How much did I spend on groceries?" → use Task tool with subagent_type="finance"
+- "Help me optimize my budget" → use Task tool with subagent_type="budget-analyzer"
+- "What are my spending patterns?" → use Task tool with subagent_type="budget-analyzer"
 
 - Coordinate multiple agents in parallel when beneficial
 - Synthesize results from all agents
