@@ -21,10 +21,19 @@ import {
 } from '@anthropic-ai/claude-agent-sdk';
 import { userDataServer } from '../mcp-servers/user-data-server.js';
 import { investingServer } from '../mcp-servers/investing-server.js';
-import { financeAgentConfig, budgetAnalyzerConfig } from './finance-agent.js';
+import { financeAgentConfig } from './finance-agent.js';
+import { budgetAnalyzerConfig } from './budget-analyzer.js';
 import { researchAgentConfig } from './research-agent.js';
 import { notesAgentConfig } from './notes-agent.js';
 import { investingAgentConfig } from './investing-agent.js';
+import {
+  shoppingAgentConfig,
+  productSpecsResearcherConfig,
+  priceTrackerConfig,
+  reviewAnalyzerConfig,
+  dealFinderConfig,
+  alternativeFinderConfig
+} from './shopping-agent.js';
 import { permissionManager } from '../lib/permissions.js';
 
 export interface AgentEvent {
@@ -84,17 +93,22 @@ export class MasterOrchestrator {
 
 ## Take Action (Agent Delegation)
 Use Task tool to delegate to specialized agents:
-  * **investing**: For investment analysis, portfolio tracking, stock research, market data (use when user mentions stocks, investments, portfolio, trading)
-  * **finance**: For financial analysis, spending tracking, budgets (use when user mentions money, transactions, budgets)
-  * **research**: For web research, fact-checking, information gathering (use when user asks questions needing external knowledge)
-  * **notes**: For accessing and managing user's notes and calendar (use when user references meetings, past conversations, saved info)
+  * finance: For basic financial analysis, spending tracking (use for simple transaction queries)
+  * budget-analyzer: For advanced budget analysis, pattern recognition, forecasting, and budget optimization (use when user asks about budgets, spending patterns, financial insights, or savings optimization)
+  * investing: For investment analysis, portfolio tracking, stock research, market data (use when user mentions stocks, investments, portfolio, trading)
+  * research: For web research, fact-checking, information gathering (use when user asks questions needing external knowledge)
+  * notes: For accessing and managing user's notes and calendar (use when user references meetings, past conversations, saved info)
+  * shopping: For product research, price comparison, deal finding, purchase recommendations (use when user mentions products, shopping, prices, purchases)
 
 IMPORTANT: Always use the Task tool when delegating. Do not try to answer investment, financial, research, or notes questions directly - delegate to the appropriate agent.
 
 Examples:
-- "What's my portfolio performance?" → Use Task tool with subagent_type="investing"
-- "How much did I spend on groceries?" → Use Task tool with subagent_type="finance"
-- "Analyze Tesla stock" → Use Task tool with subagent_type="investing"
+- "What's my portfolio performance?" → use Task tool with subagent_type="investing"
+- "How much did I spend on groceries?" → use Task tool with subagent_type="finance"
+- "Analyze Tesla stock" → use Task tool with subagent_type="investing"
+- "Help me optimize my budget" → use Task tool with subagent_type="budget-analyzer"
+- "What are my spending patterns?" → use Task tool with subagent_type="budget-analyzer"
+- "Find the best laptop under $1000" → use Task tool with subagent_type="shopping"
 
 - Coordinate multiple agents in parallel when beneficial
 - Synthesize results from all agents
@@ -120,7 +134,13 @@ Remember: The file system (data/) contains user information. Use Grep/Glob for s
           'finance': financeAgentConfig,
           'research': researchAgentConfig,
           'notes': notesAgentConfig,
+          'shopping': shoppingAgentConfig,
           'budget-analyzer': budgetAnalyzerConfig,
+          'product-specs-researcher': productSpecsResearcherConfig,
+          'price-tracker': priceTrackerConfig,
+          'review-analyzer': reviewAnalyzerConfig,
+          'deal-finder': dealFinderConfig,
+          'alternative-finder': alternativeFinderConfig,
         },
 
         // Connect MCP servers with user and investing data
@@ -130,7 +150,7 @@ Remember: The file system (data/) contains user information. Use Grep/Glob for s
         },
 
         // Allow master to use Task tool for delegation plus basic tools
-        allowedTools: ['Task', 'Bash', 'Read', 'Write', 'Grep', 'Glob', 'WebSearch'],
+        allowedTools: ['Task', 'Bash', 'Read', 'Write', 'Grep', 'Glob', 'WebSearch', 'WebFetch'],
 
         // Use permission manager for user approval
         canUseTool: permissionManager.getCanUseToolCallback(),
