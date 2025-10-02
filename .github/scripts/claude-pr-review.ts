@@ -105,7 +105,7 @@ Start by reading the relevant files to understand the codebase, then implement t
     const result = query({
       prompt: reviewPrompt,
       options: {
-        model: 'claude-sonnet-4',
+        model: 'claude-sonnet-4-20250514',
         allowedTools: [
           'Read',
           'Write',

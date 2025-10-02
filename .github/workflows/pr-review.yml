@@ -8,6 +8,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     branches: [ main, develop ]
+  workflow_dispatch:
 
 jobs:
   claude-review:
@@ -54,11 +55,11 @@ jobs:
 
         if [[ -n $(git status --porcelain) ]]; then
           git add .
-          git commit -m "🤖 Claude Code: Auto-fixes from PR review
-
-Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
+          git commit -m "🤖 Claude Code: Auto-fixes from PR review" \
+            -m "" \
+            -m "Generated with Claude Code (https://claude.com/claude-code)" \
+            -m "" \
+            -m "Co-Authored-By: Claude <noreply@anthropic.com>"
           git push
         else
           echo "No changes to commit"
