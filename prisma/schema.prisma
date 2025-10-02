@@ -244,6 +244,54 @@ model CalendarEvent {
   @@index([start])
 }
 
+// ===== INVESTING MODELS (Additional) =====
+
+model StockQuote {
+  id             String   @id @default(uuid())
+  symbol         String   @unique
+  price          Float
+  change         Float
+  changePercent  Float
+  volume         Int?
+  marketCap      Float?
+  peRatio        Float?
+  dividendYield  Float?
+  high52Week     Float?
+  low52Week      Float?
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+
+  @@index([symbol])
+  @@index([updatedAt])
+}
+
+model DividendHistory {
+  id          String   @id @default(uuid())
+  symbol      String
+  amount      Float    // Dividend amount per share
+  exDate      DateTime // Ex-dividend date
+  payDate     DateTime // Payment date
+  frequency   String   // "quarterly", "monthly", "annual"
+  createdAt   DateTime @default(now())
+
+  @@index([symbol])
+  @@index([exDate])
+}
+
+model MarketIndex {
+  id            String   @id @default(uuid())
+  symbol        String   @unique // "^GSPC" (S&P 500), "^IXIC" (NASDAQ), "^DJI" (Dow Jones)
+  name          String   // "S&P 500", "NASDAQ Composite", "Dow Jones Industrial Average"
+  value         Float
+  change        Float
+  changePercent Float
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+
+  @@index([symbol])
+  @@index([updatedAt])
+}
+
 model Task {
   id          String   @id @default(uuid())
   userId      String
