@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  date        DateTime
+  amount      Float
+  description String
+  category    String
+  userId      String   @default("user-001")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([category])
+  @@index([date])
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  date      DateTime
+  tags      String   // Comma-separated tags
+  userId    String   @default("user-001")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([date])
+}
+
+model CalendarEvent {
+  id        String   @id @default(uuid())
+  title     String
+  start     DateTime
+  end       DateTime
+  location  String?
+  attendees String   // JSON string array
+  userId    String   @default("user-001")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([start])
+}

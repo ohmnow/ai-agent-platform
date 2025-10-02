@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Agent Platform</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🤖 AI Agent Platform</h1>
+      <p class="subtitle">Multi-agent orchestration powered by Claude</p>
+    </header>
+
+    <main>
+      <div class="hero">
+        <h2>What can I help you with today?</h2>
+        <div class="prompt-input-wrapper">
+          <textarea
+            id="prompt-input"
+            placeholder="Ask me anything... I'll coordinate the right agents to help you."
+            rows="3"
+          ></textarea>
+          <button id="submit-btn" class="primary-btn">Start Conversation →</button>
+        </div>
+      </div>
+
+      <div class="templates">
+        <h3>Quick Start Templates</h3>
+        <div class="template-grid">
+          <div class="template-card" data-agent="finance">
+            <div class="template-icon">💰</div>
+            <h4>Finance</h4>
+            <p>Analyze spending, track budgets, review transactions</p>
+          </div>
+
+          <div class="template-card" data-agent="research">
+            <div class="template-icon">🔍</div>
+            <h4>Research</h4>
+            <p>Find information, verify facts, synthesize findings</p>
+          </div>
+
+          <div class="template-card" data-agent="notes">
+            <div class="template-icon">📝</div>
+            <h4>Notes</h4>
+            <p>Search notes, manage calendar, organize knowledge</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="features">
+        <h3>Platform Features</h3>
+        <div class="feature-list">
+          <div class="feature">
+            <span class="feature-icon">🎯</span>
+            <div>
+              <h4>Intelligent Delegation</h4>
+              <p>Automatically routes tasks to specialized agents</p>
+            </div>
+          </div>
+
+          <div class="feature">
+            <span class="feature-icon">🔄</span>
+            <h4>Context Management</h4>
+            <p>Maintains conversation history with automatic compaction</p>
+          </div>
+
+          <div class="feature">
+            <span class="feature-icon">💻</span>
+            <div>
+              <h4>Code Generation</h4>
+              <p>Creates precise, reusable code for calculations</p>
+            </div>
+          </div>
+
+          <div class="feature">
+            <span class="feature-icon">🔍</span>
+            <div>
+              <h4>Agentic Search</h4>
+              <p>Uses file system and grep/glob for efficient context retrieval</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>Powered by Claude Agent SDK | Built with ❤️ following Anthropic's best practices</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

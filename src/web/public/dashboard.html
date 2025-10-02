@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🤖 Agents</h2>
+        <button id="new-session-btn" class="secondary-btn">New Session</button>
+      </div>
+
+      <div class="agent-list">
+        <div class="agent-status">
+          <span class="status-dot ready"></span>
+          <span>Finance Agent</span>
+        </div>
+        <div class="agent-status">
+          <span class="status-dot ready"></span>
+          <span>Research Agent</span>
+        </div>
+        <div class="agent-status">
+          <span class="status-dot ready"></span>
+          <span>Notes Agent</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Activity</h3>
+        <div id="agent-activity" class="activity-log"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Tools Used</h3>
+        <div id="tool-usage" class="tool-log"></div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="chat-container">
+        <div id="messages" class="chat-messages"></div>
+
+        <div class="chat-input-container">
+          <textarea
+            id="user-input"
+            placeholder="Ask a question or give a command..."
+            rows="2"
+          ></textarea>
+          <button onclick="sendMessage()" class="primary-btn">Send</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Markdown parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Streaming app logic -->
+  <script src="app-streaming.js"></script>
+  <script>
+    // Wire up new session button
+    document.getElementById('new-session-btn').addEventListener('click', newSession);
+
+    // Wire up tools and activity tracking
+    // These are called from app-streaming.js when events occur
+  </script>
+</body>
+</html>

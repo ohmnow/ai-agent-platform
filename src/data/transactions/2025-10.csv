@@ -1,0 +1,15 @@
+date,amount,description,category
+2025-10-01,-45.99,Grocery Store,Food
+2025-10-01,-120.00,Electric Bill,Utilities
+2025-10-02,-12.50,Coffee Shop,Food
+2025-10-02,-85.00,Gas Station,Transportation
+2025-10-03,-150.00,Restaurant,Food
+2025-10-03,-25.00,Parking,Transportation
+2025-10-04,-200.00,Gym Membership,Health
+2025-10-05,-65.00,Grocery Store,Food
+2025-10-05,3000.00,Salary Deposit,Income
+2025-10-06,-450.00,Rent,Housing
+2025-10-07,-75.00,Internet Bill,Utilities
+2025-10-08,-30.00,Movie Tickets,Entertainment
+2025-10-09,-95.00,Grocery Store,Food
+2025-10-10,-15.00,Coffee Shop,Food

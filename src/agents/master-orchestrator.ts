@@ -1,0 +1,262 @@
+/**
+ * Master Orchestrator
+ *
+ * Coordinates multiple specialized agents to handle complex user requests.
+ * Uses Task tool for explicit delegation based on Phase 0 findings.
+ *
+ * IMPORTANT: Uses streaming input mode (async generator) for MCP compatibility.
+ * See guides/custom-tools.md for details.
+ */
+
+import {
+  query,
+  type HookInput,
+  type PreToolUseHookInput,
+  type PostToolUseHookInput,
+  type SessionStartHookInput,
+  type SessionEndHookInput,
+  type PreCompactHookInput,
+  type AgentInput,
+  type TaskOutput,
+} from '@anthropic-ai/claude-agent-sdk';
+import { userDataServer } from '../mcp-servers/user-data-server.js';
+import { financeAgentConfig, budgetAnalyzerConfig } from './finance-agent.js';
+import { researchAgentConfig } from './research-agent.js';
+import { notesAgentConfig } from './notes-agent.js';
+import { permissionManager } from '../lib/permissions.js';
+
+export interface AgentEvent {
+  type: 'agent_delegation' | 'tool_use' | 'agent_complete' | 'compaction';
+  timestamp: Date;
+  agentName?: string;
+  toolName?: string;
+  details?: any;
+  // Track subagent metrics (from TaskOutput)
+  usage?: {
+    input_tokens: number;
+    output_tokens: number;
+    cache_creation_input_tokens?: number;
+    cache_read_input_tokens?: number;
+  };
+  cost_usd?: number;
+  duration_ms?: number;
+}
+
+export class MasterOrchestrator {
+  private sessionId: string;
+  private conversationHistory: any[] = [];
+  private events: AgentEvent[] = [];
+
+  constructor(sessionId: string, conversationHistory: any[] = []) {
+    this.sessionId = sessionId;
+    this.conversationHistory = conversationHistory;
+  }
+
+  async processQuery(userPrompt: string) {
+    // IMPORTANT: MCP servers require streaming input mode (async generator)
+    // See guides/custom-tools.md for details
+    async function* generateInput() {
+      yield {
+        type: 'user' as const,
+        message: {
+          role: 'user' as const,
+          content: userPrompt
+        }
+      };
+    }
+
+    const result = query({
+      prompt: generateInput(),  // Use async generator for MCP compatibility
+      options: {
+        // Use Claude Code system prompt as base, extend with orchestrator instructions
+        systemPrompt: {
+          type: 'preset',
+          preset: 'claude_code',
+          append: `\n\nYou are a master orchestrator agent following the agent loop: gather context → take action → verify work → repeat.
+
+## Gather Context
+- Understand user's intent and required capabilities
+- Check conversation history for context
+- Search relevant data using Grep/Glob if needed
+- Determine which specialized agents are needed
+
+## Take Action (Agent Delegation)
+Use Task tool to delegate to specialized agents:
+  * finance: For financial analysis, spending tracking, budgets (use when user mentions money, transactions, budgets)
+  * research: For web research, fact-checking, information gathering (use when user asks questions needing external knowledge)
+  * notes: For accessing and managing user's notes and calendar (use when user references meetings, past conversations, saved info)
+
+IMPORTANT: Always use the Task tool when delegating. Do not try to answer financial, research, or notes questions directly - delegate to the appropriate agent.
+
+Example: If user asks "How much did I spend on groceries?", use Task tool with subagent_type="finance"
+
+- Coordinate multiple agents in parallel when beneficial
+- Synthesize results from all agents
+
+## Verify Work
+- Ensure delegated tasks were completed successfully
+- Check that agent responses are coherent and complete
+- Validate no conflicting information from different agents
+- Confirm user's original question was fully answered
+
+## Subagent Usage Guidelines
+- Use subagents for parallelization (multiple searches, analyses)
+- Subagents reduce context usage (only return relevant info)
+- Prefer file-based context over loading all data
+- Generate code for complex calculations
+
+Remember: The file system (data/) contains user information. Use Grep/Glob for search.`,
+        },
+
+        // Make specialized agents available via Task tool
+        agents: {
+          'finance': financeAgentConfig,
+          'research': researchAgentConfig,
+          'notes': notesAgentConfig,
+          'budget-analyzer': budgetAnalyzerConfig,
+        },
+
+        // Connect MCP server with user data
+        mcpServers: {
+          'user-data': userDataServer
+        },
+
+        // Allow master to use Task tool for delegation plus basic tools
+        allowedTools: ['Task', 'Bash', 'Read', 'Write', 'Grep', 'Glob', 'WebSearch'],
+
+        // Use permission manager for user approval
+        canUseTool: permissionManager.getCanUseToolCallback(),
+
+        // Load project settings for CLAUDE.md files if they exist
+        settingSources: ['project'],
+
+        // Continue conversation for memory
+        continue: this.conversationHistory.length > 0,
+
+        // Context management - implement compaction
+        maxTurns: 50, // Limit conversation length before compaction
+
+        // Hooks to track agent activity (CORRECT format from permissions.md)
+        hooks: {
+          PreToolUse: [{
+            hooks: [async (input: any, toolUseId: any, context: any) => {
+              return this.preToolUseHook(input, toolUseId, context);
+            }]
+          }],
+          PostToolUse: [{
+            hooks: [async (input: any, toolUseId: any, context: any) => {
+              return this.postToolUseHook(input, toolUseId, context);
+            }]
+          }],
+          PreCompact: [{
+            hooks: [async (input: any, toolUseId: any, context: any) => {
+              return this.preCompactHook(input, toolUseId, context);
+            }]
+          }]
+        },
+      }
+    });
+
+    // Stream and collect messages
+    const messages: any[] = [];
+    let capturedSessionId: string | undefined;
+
+    for await (const message of result) {
+      // Capture session ID from init message (see guides/sessions.md)
+      if (message.type === 'system' && message.subtype === 'init') {
+        capturedSessionId = message.session_id;
+        console.log(`📋 Session ID: ${capturedSessionId}`);
+      }
+
+      messages.push(message);
+      this.conversationHistory.push(message);
+    }
+
+    console.log('🔍 Query complete. Total events captured:', this.events.length);
+    console.log('🔍 Events:', JSON.stringify(this.events, null, 2));
+
+    return { messages, events: this.events, sessionId: capturedSessionId };
+  }
+
+  private async preToolUseHook(input: any, toolUseId: any, context: any) {
+    console.log('🔥 PRE TOOL USE HOOK FIRED');
+    console.log(`🔧 Tool: ${input.tool_name}`);
+
+    this.events.push({
+      type: 'tool_use',
+      timestamp: new Date(),
+      toolName: input.tool_name,
+      details: input.tool_input,
+    });
+
+    // Detect Task tool usage (agent delegation)
+    if (input.tool_name === 'Task') {
+      const taskInput = input.tool_input as AgentInput;
+      const agentType = taskInput.subagent_type || 'unknown';
+      console.log(`✅ TASK TOOL INVOKED - Subagent: ${agentType}`);
+
+      this.events.push({
+        type: 'agent_delegation',
+        timestamp: new Date(),
+        agentName: agentType,
+        details: taskInput,
+      });
+    }
+
+    return { continue: true };
+  }
+
+  private async postToolUseHook(input: any, toolUseId: any, context: any) {
+    console.log('🔥 POST TOOL USE HOOK FIRED');
+    console.log(`✅ Tool completed: ${input.tool_name}`);
+
+    // If Task tool completed, capture subagent metrics
+    if (input.tool_name === 'Task') {
+      const taskOutput = input.tool_response as TaskOutput;
+
+      this.events.push({
+        type: 'agent_complete',
+        timestamp: new Date(),
+        agentName: 'subagent',
+        usage: taskOutput.usage,
+        cost_usd: taskOutput.total_cost_usd,
+        duration_ms: taskOutput.duration_ms,
+      });
+
+      console.log(`📊 Subagent metrics: ${taskOutput.duration_ms}ms, $${taskOutput.total_cost_usd}`);
+    }
+
+    return { continue: true };
+  }
+
+  private async preCompactHook(input: any, toolUseId: any, context: any) {
+    console.log('🔥 PRE COMPACT HOOK FIRED');
+    console.log(`🗜️  Compacting conversation history (trigger: ${input.trigger})`);
+
+    this.events.push({
+      type: 'compaction',
+      timestamp: new Date(),
+      details: {
+        action: 'compaction',
+        trigger: input.trigger,
+        messageCount: this.conversationHistory.length,
+        custom_instructions: input.custom_instructions,
+      },
+    });
+
+    return { continue: true };
+  }
+
+  getConversationHistory() {
+    return this.conversationHistory;
+  }
+
+  getEvents() {
+    return this.events;
+  }
+
+  clearHistory() {
+    this.conversationHistory = [];
+    this.events = [];
+  }
+}
