@@ -41,6 +41,18 @@ async function reviewPR() {
   // Read PR description from branch name or documentation
   const prTitle = branchName.replace(/^(feature|fix)\//, '').replace(/-/g, ' ');
 
+  // Get PR number if this is running on a PR
+  let prNumber = '';
+  let prBody = '';
+  try {
+    const prInfo = execSync(`gh pr view ${branchName} --json number,body 2>/dev/null`).toString();
+    const prData = JSON.parse(prInfo);
+    prNumber = prData.number;
+    prBody = prData.body || '';
+  } catch (e) {
+    // Not a PR yet or gh CLI not available
+  }
+
   // Find any task documentation files
   let taskDescription = '';
   const docFiles = changedFiles.filter(f => f.endsWith('.md') || f.includes('README'));
@@ -96,6 +108,15 @@ Focus on:
 - Rewrite existing working code unless needed
 - Add features not requested
 - Break existing functionality
+
+${prNumber ? `\n**IMPORTANT - Update PR Description:**
+After completing the implementation, you MUST update the PR description to reflect completion:
+1. Read current PR body with: \`gh pr view ${prNumber} --json body -q .body\`
+2. Update task checkboxes: Change \`- [ ]\` to \`- [x]\` for all completed items
+3. Save updated description with: \`gh pr edit ${prNumber} --body "<updated-content>"\`
+
+This ensures the PR accurately shows completion status to reviewers.
+` : ''}
 
 Start by reading the relevant files to understand the codebase, then implement the feature.`;
 
