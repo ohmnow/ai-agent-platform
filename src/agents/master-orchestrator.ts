@@ -20,9 +20,11 @@ import {
   type TaskOutput,
 } from '@anthropic-ai/claude-agent-sdk';
 import { userDataServer } from '../mcp-servers/user-data-server.js';
+import { investingServer } from '../mcp-servers/investing-server.js';
 import { financeAgentConfig, budgetAnalyzerConfig } from './finance-agent.js';
 import { researchAgentConfig } from './research-agent.js';
 import { notesAgentConfig } from './notes-agent.js';
+import { investingAgentConfig } from './investing-agent.js';
 import { permissionManager } from '../lib/permissions.js';
 
 export interface AgentEvent {
@@ -82,13 +84,17 @@ export class MasterOrchestrator {
 
 ## Take Action (Agent Delegation)
 Use Task tool to delegate to specialized agents:
-  * finance: For financial analysis, spending tracking, budgets (use when user mentions money, transactions, budgets)
-  * research: For web research, fact-checking, information gathering (use when user asks questions needing external knowledge)
-  * notes: For accessing and managing user's notes and calendar (use when user references meetings, past conversations, saved info)
+  * **investing**: For investment analysis, portfolio tracking, stock research, market data (use when user mentions stocks, investments, portfolio, trading)
+  * **finance**: For financial analysis, spending tracking, budgets (use when user mentions money, transactions, budgets)
+  * **research**: For web research, fact-checking, information gathering (use when user asks questions needing external knowledge)
+  * **notes**: For accessing and managing user's notes and calendar (use when user references meetings, past conversations, saved info)
 
-IMPORTANT: Always use the Task tool when delegating. Do not try to answer financial, research, or notes questions directly - delegate to the appropriate agent.
+IMPORTANT: Always use the Task tool when delegating. Do not try to answer investment, financial, research, or notes questions directly - delegate to the appropriate agent.
 
-Example: If user asks "How much did I spend on groceries?", use Task tool with subagent_type="finance"
+Examples:
+- "What's my portfolio performance?" → Use Task tool with subagent_type="investing"
+- "How much did I spend on groceries?" → Use Task tool with subagent_type="finance"
+- "Analyze Tesla stock" → Use Task tool with subagent_type="investing"
 
 - Coordinate multiple agents in parallel when beneficial
 - Synthesize results from all agents
@@ -110,15 +116,17 @@ Remember: The file system (data/) contains user information. Use Grep/Glob for s
 
         // Make specialized agents available via Task tool
         agents: {
+          'investing': investingAgentConfig,
           'finance': financeAgentConfig,
           'research': researchAgentConfig,
           'notes': notesAgentConfig,
           'budget-analyzer': budgetAnalyzerConfig,
         },
 
-        // Connect MCP server with user data
+        // Connect MCP servers with user and investing data
         mcpServers: {
-          'user-data': userDataServer
+          'user-data': userDataServer,
+          'investing': investingServer,
         },
 
         // Allow master to use Task tool for delegation plus basic tools

@@ -54,3 +54,81 @@ model CalendarEvent {
   @@index([userId])
   @@index([start])
 }
+
+// ===== INVESTING MODELS =====
+
+model Portfolio {
+  id          String    @id @default(uuid())
+  name        String
+  accountType String    // e.g., "401k", "Roth IRA", "Taxable", "HSA"
+  broker      String?   // e.g., "Fidelity", "Vanguard", "TD Ameritrade"
+  userId      String    @default("user-001")
+  holdings    Holding[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Holding {
+  id           String    @id @default(uuid())
+  symbol       String    // Stock ticker (e.g., "AAPL", "VTSAX")
+  shares       Float     // Number of shares owned
+  costBasis    Float     // Average cost per share
+  purchaseDate DateTime  // When position was opened
+  portfolioId  String
+  portfolio    Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  userId       String    @default("user-001")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([symbol])
+  @@index([portfolioId])
+}
+
+model StockQuote {
+  id             String   @id @default(uuid())
+  symbol         String   @unique
+  price          Float
+  change         Float
+  changePercent  Float
+  volume         Int?
+  marketCap      Float?
+  peRatio        Float?
+  dividendYield  Float?
+  high52Week     Float?
+  low52Week      Float?
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+
+  @@index([symbol])
+  @@index([updatedAt])
+}
+
+model DividendHistory {
+  id          String   @id @default(uuid())
+  symbol      String
+  amount      Float    // Dividend amount per share
+  exDate      DateTime // Ex-dividend date
+  payDate     DateTime // Payment date
+  frequency   String   // "quarterly", "monthly", "annual"
+  createdAt   DateTime @default(now())
+
+  @@index([symbol])
+  @@index([exDate])
+}
+
+model MarketIndex {
+  id            String   @id @default(uuid())
+  symbol        String   @unique // "^GSPC" (S&P 500), "^IXIC" (NASDAQ), "^DJI" (Dow Jones)
+  name          String   // "S&P 500", "NASDAQ Composite", "Dow Jones Industrial Average"
+  value         Float
+  change        Float
+  changePercent Float
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+
+  @@index([symbol])
+  @@index([updatedAt])
+}
