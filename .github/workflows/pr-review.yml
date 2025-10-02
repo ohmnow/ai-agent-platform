@@ -1,6 +1,10 @@
 name: Claude Code PR Review
 
 on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'fix/**'
   pull_request:
     types: [opened, synchronize, reopened]
     branches: [ main, develop ]
@@ -15,7 +19,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 0
 
     - name: Use Node.js
@@ -36,11 +39,11 @@ jobs:
       env:
         ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         DATABASE_URL: file:./dev.db
-        PR_NUMBER: ${{ github.event.pull_request.number }}
-        BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
-        HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+        GITHUB_REF: ${{ github.ref }}
+        GITHUB_HEAD_REF: ${{ github.head_ref }}
+        GITHUB_BASE_REF: ${{ github.base_ref }}
       run: |
-        echo "🤖 Claude Code reviewing PR #$PR_NUMBER"
+        echo "🤖 Claude Code reviewing branch: ${GITHUB_REF#refs/heads/}"
         npx tsx .github/scripts/claude-pr-review.ts
 
     - name: Commit Claude's suggestions
