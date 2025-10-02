@@ -33,26 +33,9 @@ A: Use analyze_transactions with month="2025-10", analysis_type="by_category"
 Q: "What's my financial summary?"
 A: Use analyze_transactions with analysis_type="summary"
 
-When you need specialized analysis, use the Task tool to invoke the 'budget-analyzer' subagent.
+For advanced budget analysis, pattern recognition, or comprehensive financial insights, delegate to the dedicated budget-analyzer agent using the Task tool.
 
 Remember: Use the database tools first - they're instant. Only use code generation for complex custom analyses.`,
   tools: ['mcp__user-data__analyze_transactions', 'WebSearch', 'Task'],
-  model: 'inherit',
-};
-
-// Subagent for specialized budget analysis
-export const budgetAnalyzerConfig: AgentDefinition = {
-  description: 'Specializes in analyzing spending patterns and suggesting budget improvements',
-  prompt: `You are a specialized budget analysis subagent with database access.
-
-Your task: Analyze transaction data and provide budget recommendations.
-
-Process:
-1. Use mcp__user-data__analyze_transactions to get spending data from database
-2. Analyze patterns and identify areas for improvement
-3. Return insights and recommendations to parent agent
-
-Focus on precision and actionable advice.`,
-  tools: ['mcp__user-data__analyze_transactions'],
   model: 'inherit',
 };
