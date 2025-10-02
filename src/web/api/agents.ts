@@ -109,6 +109,7 @@ export function handleAgentStatus(req: Request, res: Response) {
       { id: 'finance', name: 'Finance Agent', status: 'ready' },
       { id: 'research', name: 'Research Agent', status: 'ready' },
       { id: 'notes', name: 'Notes Agent', status: 'ready' },
+      { id: 'shopping', name: 'Shopping Agent', status: 'ready' },
     ],
     conversationLength: session?.conversationHistory.length || 0,
     sessionActive: !!session,

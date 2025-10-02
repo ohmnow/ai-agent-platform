@@ -11,6 +11,14 @@ import { userDataServer } from '../../mcp-servers/user-data-server.js';
 import { financeAgentConfig, budgetAnalyzerConfig } from '../../agents/finance-agent.js';
 import { researchAgentConfig } from '../../agents/research-agent.js';
 import { notesAgentConfig } from '../../agents/notes-agent.js';
+import {
+  shoppingAgentConfig,
+  productSpecsResearcherConfig,
+  priceTrackerConfig,
+  reviewAnalyzerConfig,
+  dealFinderConfig,
+  alternativeFinderConfig
+} from '../../agents/shopping-agent.js';
 import { permissionManager } from '../../lib/permissions.js';
 
 // Track permission decisions per session
@@ -92,7 +100,13 @@ export async function handleStreamingQuery(req: Request, res: Response) {
           'finance': financeAgentConfig,
           'research': researchAgentConfig,
           'notes': notesAgentConfig,
+          'shopping': shoppingAgentConfig,
           'budget-analyzer': budgetAnalyzerConfig,
+          'product-specs-researcher': productSpecsResearcherConfig,
+          'price-tracker': priceTrackerConfig,
+          'review-analyzer': reviewAnalyzerConfig,
+          'deal-finder': dealFinderConfig,
+          'alternative-finder': alternativeFinderConfig,
         },
 
         // MCP servers
@@ -102,7 +116,7 @@ export async function handleStreamingQuery(req: Request, res: Response) {
 
         // Tools - Include MCP server tools
         allowedTools: [
-          'Task', 'Bash', 'Read', 'Write', 'Grep', 'Glob', 'WebSearch',
+          'Task', 'Bash', 'Read', 'Write', 'Grep', 'Glob', 'WebSearch', 'WebFetch',
           'mcp__user-data__analyze_transactions',
           'mcp__user-data__search_notes',
           'mcp__user-data__get_calendar_events',
