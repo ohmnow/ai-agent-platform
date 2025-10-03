@@ -451,15 +451,6 @@ model ScheduledTask {
 
 // ===== OAUTH & API CREDENTIALS =====
 
-model User {
-  id              String          @id @default(uuid())
-  email           String          @unique
-  name            String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  apiCredentials  ApiCredential[]
-}
-
 model ApiCredential {
   id           String    @id @default(uuid())
   userId       String
