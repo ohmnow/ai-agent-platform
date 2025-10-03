@@ -9,6 +9,7 @@ export interface PermissionDecision {
   behavior: 'allow' | 'deny';
   updatedInput?: any;
   message?: string;
+  interrupt?: boolean;
 }
 
 export interface PermissionRecord {

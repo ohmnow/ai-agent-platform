@@ -65,19 +65,25 @@ export async function handleAgentQuery(req: Request, res: Response) {
     sessionManager.updateHistory(session.id, messages);
 
     // Extract result from messages
-    const resultMessage = messages.find(m => m.type === 'result');
-    const result = resultMessage?.result || null;
+    const resultMessage = messages.find(m => m.type === 'result') as any;
+    const result = (resultMessage?.subtype === 'success' ? resultMessage.result : null) || null;
 
     // Return response with agent activity
     res.json({
       success: true,
       sessionId: capturedSessionId || session.id,
       result,
-      messages: messages.map(msg => ({
-        type: msg.type,
-        text: msg.text || msg.result,
-        name: msg.name,
-      })),
+      messages: messages.map(msg => {
+        if (msg.type === 'assistant') {
+          const textBlocks = (msg as any).message.content.filter((block: any) => block.type === 'text');
+          const text = textBlocks.map((block: any) => block.text).join('');
+          return { type: msg.type, text };
+        }
+        if (msg.type === 'result' && (msg as any).subtype === 'success') {
+          return { type: msg.type, text: (msg as any).result };
+        }
+        return { type: msg.type, text: '' };
+      }),
       events: events.map(evt => ({
         type: evt.type,
         timestamp: evt.timestamp,

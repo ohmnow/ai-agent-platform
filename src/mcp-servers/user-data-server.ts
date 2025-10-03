@@ -7,7 +7,7 @@
 
 import { tool, createSdkMcpServer } from '@anthropic-ai/claude-agent-sdk';
 import { z } from 'zod';
-import { PrismaClient, TaskStatus, TaskPriority } from '../generated/prisma/index.js';
+import { PrismaClient } from '../generated/prisma/index.js';
 
 const prisma = new PrismaClient();
 

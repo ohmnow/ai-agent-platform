@@ -48,6 +48,7 @@
     "alphavantage": "^2.5.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "google-auth-library": "^10.4.0",
     "googleapis": "^144.0.0",
     "marked": "^16.3.0",
     "prisma": "^6.16.3",

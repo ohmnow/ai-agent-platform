@@ -85,7 +85,8 @@ export async function handleStreamingQuery(req: Request, res: Response) {
         message: {
           role: 'user' as const,
           content: userPrompt
-        }
+        },
+        parent_tool_use_id: undefined
       };
     }
 
@@ -149,17 +150,28 @@ export async function handleStreamingQuery(req: Request, res: Response) {
         continue;
       }
 
-      // Stream text tokens
-      if (message.type === 'text') {
-        res.write(`event: text\n`);
-        res.write(`data: ${JSON.stringify({ text: message.text })}\n\n`);
+      // Stream assistant messages with text
+      if (message.type === 'assistant') {
+        const textBlocks = message.message.content.filter(
+          (block: any) => block.type === 'text'
+        );
+        if (textBlocks.length > 0) {
+          const text = textBlocks.map((block: any) => block.text).join('');
+          res.write(`event: text\n`);
+          res.write(`data: ${JSON.stringify({ text })}\n\n`);
+        }
         continue;
       }
 
       // Stream result
       if (message.type === 'result') {
-        res.write(`event: result\n`);
-        res.write(`data: ${JSON.stringify({ result: message.result })}\n\n`);
+        if (message.subtype === 'success') {
+          res.write(`event: result\n`);
+          res.write(`data: ${JSON.stringify({ result: message.result })}\n\n`);
+        } else {
+          res.write(`event: result\n`);
+          res.write(`data: ${JSON.stringify({ result: 'Query completed with errors', error: true })}\n\n`);
+        }
         continue;
       }
 

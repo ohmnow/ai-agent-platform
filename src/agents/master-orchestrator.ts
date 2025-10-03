@@ -75,7 +75,8 @@ export class MasterOrchestrator {
         message: {
           role: 'user' as const,
           content: userPrompt
-        }
+        },
+        parent_tool_use_id: undefined
       };
     }
 
