@@ -37,6 +37,8 @@ model User {
   tasks              Task[]
   emailMetadata      EmailMetadata[]
   shoppingWishlist   ShoppingItem[]
+  plaidItems         PlaidItem[]
+  apiCredentials     ApiCredential[]
 
   @@index([email])
 }
@@ -242,6 +244,30 @@ model CalendarEvent {
 
   @@index([userId])
   @@index([start])
+}
+
+// ===== PLAID INTEGRATION =====
+
+model PlaidItem {
+  id              String    @id @default(uuid())
+  userId          String
+  itemId          String
+  accessToken     String
+  institutionId   String
+  institutionName String
+  accounts        String    // JSON: [{ id, name, type, mask }]
+  cursor          String?
+  lastSync        DateTime?
+  status          String    @default("active")
+  error           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId])
+  @@index([userId])
+  @@index([status])
 }
 
 // ===== INVESTING MODELS (Additional) =====
