@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Agentcomm Database Schema
+// Multi-agent productivity platform with user management and agent workspaces
 
 generator client {
   provider = "prisma-client-js"
@@ -11,46 +11,485 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ===== USER MANAGEMENT =====
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // User preferences and goals
+  goals              String? // JSON array of user goals
+  interests          String? // JSON array of interests
+  riskTolerance      String? // conservative, moderate, aggressive
+  enabledAgents      String? // JSON array of enabled agent IDs
+
+  // Relations
+  transactions       Transaction[]
+  notes              Note[]
+  calendarEvents     CalendarEvent[]
+  portfolios         Portfolio[]
+  budgets            Budget[]
+  agentWorkspaces    AgentWorkspace[]
+  conversations      Conversation[]
+  tasks              Task[]
+  emailMetadata      EmailMetadata[]
+  shoppingWishlist   ShoppingItem[]
+  plaidItems         PlaidItem[]
+  apiCredentials     ApiCredential[]
+
+  @@index([email])
+}
+
+// ===== AGENT WORKSPACES =====
+
+model AgentWorkspace {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  agentId   String   // finance, investing, email, etc.
+  agentName String
+
+  // Agent-specific configuration
+  config    String?  // JSON configuration
+
+  // Agent memory and state
+  memory    String?  // JSON memory object
+  lastRun   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, agentId])
+  @@index([userId])
+  @@index([agentId])
+}
+
+// ===== CONVERSATION HISTORY =====
+
+model Conversation {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  sessionId   String   @unique
+  agentId     String?  // Which agent handled this conversation
+
+  // Conversation metadata
+  title       String?  // Auto-generated or user-provided
+  summary     String?  // AI-generated summary
+
+  messages    Message[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([agentId])
+  @@index([sessionId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  role           String       // user, assistant, system
+  content        String       // Message content
+
+  // Tool usage tracking
+  toolsUsed      String?      // JSON array of tools used
+
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+// ===== FINANCIAL DATA =====
+
 model Transaction {
   id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   date        DateTime
   amount      Float
   description String
   category    String
-  userId      String   @default("user-001")
+  merchant    String?
+
+  // Optional: link to budget
+  budgetId    String?
+  budget      Budget?  @relation(fields: [budgetId], references: [id])
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([userId])
   @@index([category])
   @@index([date])
+  @@index([budgetId])
 }
+
+model Budget {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  category    String
+  amount      Float    // Budget limit
+  period      String   @default("monthly") // daily, weekly, monthly, yearly
+
+  startDate   DateTime
+  endDate     DateTime?
+
+  // Budget status
+  spent       Float    @default(0)
+  remaining   Float    @default(0)
+
+  transactions Transaction[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, category, period])
+  @@index([userId])
+  @@index([category])
+}
+
+// ===== INVESTING DATA =====
+
+model Portfolio {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String   // e.g., "Main Portfolio", "IRA", "401k"
+  accountType String?  // brokerage, ira, 401k, etc.
+
+  holdings    Holding[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Holding {
+  id          String   @id @default(uuid())
+  portfolioId String
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  symbol      String   // Stock ticker
+  shares      Float
+  costBasis   Float    // Purchase price per share
+  purchaseDate DateTime
+
+  // Current value (updated periodically)
+  currentPrice Float?
+  lastUpdated  DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([portfolioId])
+  @@index([symbol])
+}
+
+// ===== NOTES & KNOWLEDGE =====
 
 model Note {
   id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   title     String
   content   String
-  date      DateTime
   tags      String   // Comma-separated tags
-  userId    String   @default("user-001")
+
+  // Optional: link to related notes
+  relatedNotes String? // JSON array of note IDs
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
-  @@index([date])
+  @@index([updatedAt])
 }
+
+// ===== CALENDAR & TASKS =====
 
 model CalendarEvent {
   id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   title     String
+  description String?
   start     DateTime
   end       DateTime
   location  String?
-  attendees String   // JSON string array
-  userId    String   @default("user-001")
+  attendees String?  // JSON array
+
+  // External calendar sync
+  externalId String? // Google Calendar event ID
+  source     String? @default("manual") // manual, google, outlook
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([start])
+}
+
+// ===== PLAID INTEGRATION =====
+
+model PlaidItem {
+  id              String    @id @default(uuid())
+  userId          String
+  itemId          String
+  accessToken     String
+  institutionId   String
+  institutionName String
+  accounts        String    // JSON: [{ id, name, type, mask }]
+  cursor          String?
+  lastSync        DateTime?
+  status          String    @default("active")
+  error           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId])
+  @@index([userId])
+  @@index([status])
+}
+
+// ===== INVESTING MODELS (Additional) =====
+
+model StockQuote{
+  id             String   @id @default(uuid())
+  symbol         String   @unique
+  price          Float
+  change         Float
+  changePercent  Float
+  volume         Int?
+  marketCap      Float?
+  peRatio        Float?
+  dividendYield  Float?
+  high52Week     Float?
+  low52Week      Float?
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+
+  @@index([symbol])
+  @@index([updatedAt])
+}
+
+model DividendHistory {
+  id          String   @id @default(uuid())
+  symbol      String
+  amount      Float    // Dividend amount per share
+  exDate      DateTime // Ex-dividend date
+  payDate     DateTime // Payment date
+  frequency   String   // "quarterly", "monthly", "annual"
+  createdAt   DateTime @default(now())
+
+  @@index([symbol])
+  @@index([exDate])
+}
+
+model MarketIndex {
+  id            String   @id @default(uuid())
+  symbol        String   @unique // "^GSPC" (S&P 500), "^IXIC" (NASDAQ), "^DJI" (Dow Jones)
+  name          String   // "S&P 500", "NASDAQ Composite", "Dow Jones Industrial Average"
+  value         Float
+  change        Float
+  changePercent Float
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+
+  @@index([symbol])
+  @@index([updatedAt])
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  status      String   @default("pending") // pending, in_progress, completed, cancelled
+  priority    String?  // low, medium, high
+
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  // Optional: link to calendar event
+  eventId     String?
+
+  // Tags/categories
+  tags        String?  // Comma-separated
+
+  // Additional PR #9 fields
+  estimatedMinutes Int?    // Time estimate in minutes
+  actualMinutes    Int?    // Actual time spent
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([priority])
+}
+
+// ===== TASK/CALENDAR MODELS (Additional from PR #9) =====
+
+model TimeBlock {
+  id          String   @id @default(uuid())
+  title       String
+  start       DateTime
+  end         DateTime
+  taskId      String?  // Optional link to a task
+  category    String   // e.g., "Deep Work", "Meetings", "Admin"
+  description String?
+  userId      String   @default("user-001")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([start])
+  @@index([category])
+}
+
+model ProductivityLog {
+  id             String   @id @default(uuid())
+  date           DateTime
+  tasksCompleted Int      @default(0)
+  timeSpent      Int      // Total minutes spent on tasks
+  focusRating    Int?     // 1-5 rating of focus quality
+  notes          String?  // Reflection notes
+  userId         String   @default("user-001")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+  @@index([date])
+}
+
+// ===== EMAIL METADATA (Optional Cache) =====
+
+model EmailMetadata {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  externalId  String   @unique // Gmail message ID
+  subject     String
+  sender      String
+  recipients  String   // JSON array
+
+  receivedAt  DateTime
+  readAt      DateTime?
+
+  // Categorization
+  category    String?  // work, personal, newsletter, promotion
+  priority    String?  // high, medium, low
+
+  // AI-generated
+  summary     String?  // Brief summary
+  actionItems String?  // JSON array of extracted action items
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([receivedAt])
+  @@index([externalId])
+}
+
+// ===== SHOPPING DATA =====
+
+model ShoppingItem {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String
+  url         String?
+  currentPrice Float?
+  targetPrice  Float?  // Alert when price drops below this
+
+  // Product details
+  description String?
+  imageUrl    String?
+  merchant    String?
+
+  // Tracking
+  priceHistory String? // JSON array of {date, price}
+  lastChecked  DateTime?
+
+  // Status
+  purchased   Boolean  @default(false)
+  purchasedAt DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([purchased])
+}
+
+// ===== SCHEDULED TASKS (Proactive Agent Operations) =====
+
+model ScheduledTask {
+  id          String   @id @default(uuid())
+  userId      String
+
+  agentId     String   // Which agent should run this
+  taskType    String   // market_summary, inbox_summary, etc.
+
+  // Schedule (cron-like)
+  schedule    String   // "0 8 * * *" = daily at 8am
+  enabled     Boolean  @default(true)
+
+  // Execution tracking
+  lastRun     DateTime?
+  nextRun     DateTime?
+  lastStatus  String?  // success, error
+  lastResult  String?  // JSON result data
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([agentId])
+  @@index([nextRun])
+  @@index([enabled])
+}
+
+// ===== OAUTH & API CREDENTIALS =====
+
+model ApiCredential {
+  id           String    @id @default(uuid())
+  userId       String
+  service      String    // e.g., "gmail", "google-calendar", "plaid"
+  accessToken  String    // Encrypted access token
+  refreshToken String?   // Encrypted refresh token
+  expiresAt    DateTime? // Token expiration
+  metadata     String?   // JSON metadata (scopes, etc.)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, service])
+  @@index([userId])
 }
