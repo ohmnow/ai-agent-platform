@@ -81,6 +81,93 @@ async function seedCalendarEvents() {
   console.log(`✅ Created ${events.length} calendar events`);
 }
 
+async function seedInvestingData() {
+  console.log('💰 Seeding investing data...');
+
+  // Create sample portfolios
+  const mainPortfolio = await prisma.portfolio.create({
+    data: {
+      name: 'Main Portfolio',
+      accountType: 'Taxable',
+      broker: 'Fidelity',
+      userId: 'user-001',
+    },
+  });
+
+  const retirementPortfolio = await prisma.portfolio.create({
+    data: {
+      name: '401(k)',
+      accountType: '401k',
+      broker: 'Vanguard',
+      userId: 'user-001',
+    },
+  });
+
+  // Add sample holdings to main portfolio
+  const mainHoldings = [
+    { symbol: 'AAPL', shares: 25, costBasis: 150.00, purchaseDate: '2024-06-15' },
+    { symbol: 'MSFT', shares: 15, costBasis: 310.00, purchaseDate: '2024-07-20' },
+    { symbol: 'GOOGL', shares: 8, costBasis: 140.00, purchaseDate: '2024-08-10' },
+    { symbol: 'TSLA', shares: 12, costBasis: 220.00, purchaseDate: '2024-09-05' },
+    { symbol: 'NVDA', shares: 10, costBasis: 95.00, purchaseDate: '2024-05-10' },
+  ];
+
+  for (const holding of mainHoldings) {
+    await prisma.holding.create({
+      data: {
+        symbol: holding.symbol,
+        shares: holding.shares,
+        costBasis: holding.costBasis,
+        purchaseDate: new Date(holding.purchaseDate),
+        portfolioId: mainPortfolio.id,
+        userId: 'user-001',
+      },
+    });
+  }
+
+  // Add sample holdings to retirement portfolio
+  const retirementHoldings = [
+    { symbol: 'VTSAX', shares: 100, costBasis: 85.00, purchaseDate: '2024-01-15' },
+    { symbol: 'VTIAX', shares: 50, costBasis: 18.50, purchaseDate: '2024-01-15' },
+    { symbol: 'VBTLX', shares: 25, costBasis: 11.20, purchaseDate: '2024-02-01' },
+  ];
+
+  for (const holding of retirementHoldings) {
+    await prisma.holding.create({
+      data: {
+        symbol: holding.symbol,
+        shares: holding.shares,
+        costBasis: holding.costBasis,
+        purchaseDate: new Date(holding.purchaseDate),
+        portfolioId: retirementPortfolio.id,
+        userId: 'user-001',
+      },
+    });
+  }
+
+  // Add sample market indices (these will be updated with real data when the agent runs)
+  const marketIndices = [
+    { symbol: '^GSPC', name: 'S&P 500', value: 5800.0, change: 15.2, changePercent: 0.26 },
+    { symbol: '^IXIC', name: 'NASDAQ Composite', value: 18200.0, change: -25.5, changePercent: -0.14 },
+    { symbol: '^DJI', name: 'Dow Jones Industrial Average', value: 42000.0, change: 100.3, changePercent: 0.24 },
+  ];
+
+  for (const index of marketIndices) {
+    await prisma.marketIndex.create({
+      data: {
+        symbol: index.symbol,
+        name: index.name,
+        value: index.value,
+        change: index.change,
+        changePercent: index.changePercent,
+      },
+    });
+  }
+
+  console.log(`✅ Created 2 portfolios with ${mainHoldings.length + retirementHoldings.length} holdings`);
+  console.log(`✅ Created ${marketIndices.length} market indices`);
+}
+
 async function main() {
   console.log('🌱 Starting database seed...\n');
 
@@ -88,6 +175,7 @@ async function main() {
     await seedTransactions();
     await seedNotes();
     await seedCalendarEvents();
+    await seedInvestingData();
 
     console.log('\n✅ Database seeding completed!');
   } catch (error) {
