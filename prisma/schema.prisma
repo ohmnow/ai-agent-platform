@@ -246,7 +246,7 @@ model CalendarEvent {
 
 // ===== INVESTING MODELS (Additional) =====
 
-model StockQuote {
+model StockQuote{
   id             String   @id @default(uuid())
   symbol         String   @unique
   price          Float
@@ -447,4 +447,32 @@ model ScheduledTask {
   @@index([agentId])
   @@index([nextRun])
   @@index([enabled])
+}
+
+// ===== OAUTH & API CREDENTIALS =====
+
+model User {
+  id              String          @id @default(uuid())
+  email           String          @unique
+  name            String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  apiCredentials  ApiCredential[]
+}
+
+model ApiCredential {
+  id           String    @id @default(uuid())
+  userId       String
+  service      String    // e.g., "gmail", "google-calendar", "plaid"
+  accessToken  String    // Encrypted access token
+  refreshToken String?   // Encrypted refresh token
+  expiresAt    DateTime? // Token expiration
+  metadata     String?   // JSON metadata (scopes, etc.)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, service])
+  @@index([userId])
 }
