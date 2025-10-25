@@ -77,6 +77,29 @@ The `skill-creator` skill guides you through creating effective skills. It provi
 
 **When to use**: When you want to create a new skill or update an existing skill that extends Claude's capabilities.
 
+### Custom Skills
+
+#### conventional-commits
+
+Generate git commit messages following the Conventional Commits specification:
+- Semantic commit types (feat, fix, docs, etc.)
+- Scoped commits for better organization
+- Breaking change notation
+- Integration with automated changelog tools
+
+**When to use**: When creating git commits, especially when you ask to commit changes or follow conventional commit standards.
+
+#### parallel-dev-automation
+
+Orchestrate autonomous parallel development using Claude Code instances and GitHub Actions:
+- Break down project plans into GitHub issues
+- Trigger automated development on labeled issues
+- Manage parallel Claude Code instances via CI/CD
+- Create PRs automatically with smart merge strategies
+- Handle test failures and conflicts with automated rebase
+
+**When to use**: When working on complex projects that need to be broken down into parallelizable tasks, or when you want to leverage GitHub Actions for autonomous development at scale.
+
 ## Creating Your First Custom Skill
 
 ### Option 1: Ask Claude (Recommended)

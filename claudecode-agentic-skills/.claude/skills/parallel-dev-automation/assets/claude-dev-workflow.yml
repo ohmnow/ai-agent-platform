@@ -1,0 +1,191 @@
+name: Claude Autonomous Development
+
+on:
+  issues:
+    types: [labeled]
+
+# Limit concurrent executions
+concurrency:
+  group: claude-dev-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  develop:
+    # Only run when 'claude-task' label is added
+    if: github.event.label.name == 'claude-task'
+    runs-on: ubuntu-latest
+
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: write
+
+    steps:
+      - name: Add status comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '🤖 Claude is starting work on this issue...'
+            });
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract issue details
+        id: issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+
+            // Create branch name from issue
+            const branchName = `feat/issue-${issue.number}-${issue.title.toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .substring(0, 50)}`;
+
+            // Extract labels
+            const labels = issue.labels.map(l => l.name);
+            const type = labels.find(l => ['feat', 'fix', 'docs', 'refactor', 'test'].includes(l)) || 'feat';
+            const complexity = labels.find(l => l.startsWith('complexity:'))?.replace('complexity:', '') || 'medium';
+            const priority = labels.find(l => l.startsWith('p'))?.substring(1) || '2';
+
+            core.setOutput('branch', branchName);
+            core.setOutput('type', type);
+            core.setOutput('complexity', complexity);
+            core.setOutput('priority', priority);
+            core.setOutput('title', issue.title);
+            core.setOutput('body', issue.body);
+
+      - name: Create feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b ${{ steps.issue.outputs.branch }}
+
+      # This is where Claude Code would be invoked
+      # You'll need to integrate with Claude Code CLI or API
+      - name: Development Task
+        id: develop
+        env:
+          ISSUE_TITLE: ${{ steps.issue.outputs.title }}
+          ISSUE_BODY: ${{ steps.issue.outputs.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          TASK_TYPE: ${{ steps.issue.outputs.type }}
+        run: |
+          echo "🚧 Development task would run here"
+          echo "This step needs Claude Code integration"
+          echo ""
+          echo "Issue: $ISSUE_TITLE"
+          echo "Type: $TASK_TYPE"
+          echo ""
+          echo "TODO: Integrate Claude Code CLI/API here"
+          echo "Example: claude-code execute --issue $ISSUE_NUMBER"
+
+          # Placeholder: Create a sample file to demonstrate workflow
+          mkdir -p src
+          cat > src/placeholder-$ISSUE_NUMBER.txt << EOF
+          # Task from Issue #$ISSUE_NUMBER
+
+          Title: $ISSUE_TITLE
+          Type: $TASK_TYPE
+
+          This file demonstrates the workflow.
+          Replace this step with actual Claude Code integration.
+          EOF
+
+          git add .
+          git commit -m "$TASK_TYPE: ${ISSUE_TITLE}
+
+          Implements requirements from issue #${ISSUE_NUMBER}.
+
+          This is a placeholder commit demonstrating the workflow.
+          Actual implementation would be done by Claude Code.
+
+          Closes #${ISSUE_NUMBER}"
+
+      - name: Push branch
+        run: |
+          git push origin ${{ steps.issue.outputs.branch }}
+
+      - name: Create Pull Request
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `${{ steps.issue.outputs.type }}: ${{ steps.issue.outputs.title }}`,
+              head: '${{ steps.issue.outputs.branch }}',
+              base: 'main',
+              body: `## Summary
+
+            Automated implementation of issue #${{ github.event.issue.number }}.
+
+            ## Changes
+
+            - Implemented requirements from issue description
+            - Added tests for new functionality
+            - Updated documentation as needed
+
+            ## Testing
+
+            - [ ] Unit tests passing
+            - [ ] Integration tests passing
+            - [ ] Manual testing required
+
+            ## Closes
+
+            Closes #${{ github.event.issue.number }}
+
+            ---
+
+            🤖 This PR was created automatically by Claude Code`,
+              draft: false
+            });
+
+            // Add labels
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: ['automated', '${{ steps.issue.outputs.type }}']
+            });
+
+            core.setOutput('pr_number', pr.number);
+            return pr.number;
+
+      - name: Comment on issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '✅ Pull request created: #${{ steps.pr.outputs.pr_number }}\n\nReview and merge when ready.'
+            });
+
+  # Optional: Auto-merge if tests pass
+  auto-merge:
+    needs: develop
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+
+    steps:
+      - name: Enable auto-merge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // This would enable auto-merge on the PR
+            // Requires branch protection rules and status checks
+            console.log('Auto-merge configuration would go here');
+            console.log('Set up based on your repository settings');
