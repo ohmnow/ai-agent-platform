@@ -1,6 +1,6 @@
 ---
 name: parallel-dev-automation
-description: Orchestrate autonomous parallel development using Claude Code instances and GitHub Actions. This skill should be used when breaking down project plans into tasks, creating GitHub issues, triggering parallel Claude Code development, managing automated PRs, and coordinating CI/CD workflows for team-scale autonomous development.
+description: Automatically orchestrate parallel development workflows. Use when planning features, implementing multi-part changes, working from PRDs, managing complex development tasks, or coordinating team-scale work. Breaks plans into parallelizable GitHub issues, triggers automated Claude Code development via CI/CD, and manages PR workflows with intelligent merge strategies.
 ---
 
 # Parallel Development Automation
