@@ -1,6 +1,41 @@
 # Claude Code Agentic Skills
 
-This repository demonstrates how to set up and use Claude Code skills in your projects, with a collection of foundational document-processing skills and a meta skill for creating new skills.
+**Dual-Purpose Repository**:
+1. **GitHub Template** - Reusable foundation for building AI-agent-powered applications
+2. **EstimateFlow Project Checkpoint** - Complete MVP documentation for construction estimating platform
+
+This repository contains:
+- **Reusable Claude Code Skills** for any project (sub-agent orchestration, parallel development automation)
+- **EstimateFlow Documentation** - Full technical specs, 39 GitHub issues, agent architecture ([see project-docs/](./project-docs/))
+- **Project Templates** - Start new agentic projects quickly
+
+---
+
+## 🚀 Two Ways to Use This Repository
+
+### Use Case 1: Start EstimateFlow Development
+EstimateFlow documentation is complete and ready for implementation:
+- **[Read Project Summary](./project-docs/PROJECT-SUMMARY.md)** - Quick overview
+- **[Review Technical Specs](./project-docs/technical-specs.md)** - Complete architecture
+- **[See GitHub Issues](./project-docs/github-issues.md)** - 39 parallelizable issues
+- **[Understand Features](./project-docs/features.md)** - Detailed specifications
+
+**Next Steps**: [Create EstimateFlow project repository](./GITHUB-WORKFLOW.md#creating-estimateflow-project-repository)
+
+### Use Case 2: Start a New Agentic Project
+Use this as a template for any AI-agent-powered application:
+1. Click "Use this template" on GitHub
+2. Copy [project documentation templates](./project-docs/templates/)
+3. Leverage skills: sub-agent-orchestration, parallel-dev-automation
+4. Follow the same pattern: plan → issues → parallel development
+
+**Guide**: [GitHub Workflow & Template Usage](./GITHUB-WORKFLOW.md)
+
+---
+
+## What Are Skills?
+
+Skills are modular extensions that enhance Claude's capabilities. They're **autonomously invoked** by Claude based on your request - you don't need to explicitly call them like slash commands.
 
 ## What Are Skills?
 
@@ -99,6 +134,20 @@ Orchestrate autonomous parallel development using Claude Code instances and GitH
 - Handle test failures and conflicts with automated rebase
 
 **When to use**: When working on complex projects that need to be broken down into parallelizable tasks, or when you want to leverage GitHub Actions for autonomous development at scale.
+
+**Example**: EstimateFlow project uses this skill - see [github-issues.md](./project-docs/github-issues.md) for 39 parallelizable issues.
+
+#### sub-agent-orchestration
+
+Orchestrate complex multi-agent workflows for maximum efficiency:
+- Coordinate multiple specialized AI agents
+- Execute tasks in parallel or sequence
+- Break down complex features into specialized work units
+- Create purpose-built agents for specific domains
+
+**When to use**: Complex features requiring different expertise (frontend + backend + tests), large-scale changes, quality assurance workflows.
+
+**Example**: EstimateFlow uses 8 specialized agents (photo analyzer, voice transcriber, hours estimator, etc.) working in parallel/sequence.
 
 ## Creating Your First Custom Skill
 
